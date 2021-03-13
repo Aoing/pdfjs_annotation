@@ -1,19 +1,46 @@
 import { AnnotationBar } from "./annotation_bar.js"
+import { PDFViewerApplication } from "../app.js";
+
+const GlobalConfig = {
+	annotations: null,
+	currentPage: null,
+	currentTextLayer: null,
+	annotationButton: {},
+	pdfViewerApplication: null,
+	drawAnnotation: null,
+	canvas: null,
+}
+
+/* 判断当前页是否加载完毕 */
 
 /* 判断文档以及每一页的 canvas 标签是否加载完毕 */
 function isPDFLoaded(PDFViewerApplication, callback){
 	var interval = setInterval(loadPdf, 1000);
     function loadPdf() {
         if (PDFViewerApplication.pdfDocument != null) {
-			//var page = PDFViewerApplication.pdfViewer.getPageView(1);
+			GlobalConfig.pdfViewerApplication = PDFViewerApplication;
+			var page = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page);	// 获取当前页面当前页
 			var pageList = PDFViewerApplication.pdfViewer.viewer.childNodes;
-			if(pageList != null ){
+			if(page != null && GlobalConfig.currentPage != page){
+				GlobalConfig.currentPage = page;	// 将当前页赋值给全局变量，以便于在外部 callback 中使用
+				GlobalConfig.canvas = page.canvas;
+				var pageLastElement = pageList[PDFViewerApplication.page - 1].lastElementChild;
+				if(pageLastElement != null && pageLastElement.className == "textLayer"){
+					GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
+					callback();		// 调用传入的回调函数
+					console.log("画布加载成功，添加监听事件");
+					//window.clearInterval(interval);
+				}else{
+					console.info('当前页面 canvasWrapper 还未加载');
+				}
+			}
+			/*if(pageList != null ){
 				for (let i = 0; i < pageList.length; i++) {
 					const page = pageList[i];
 					canvasLoadedCallBack(page, callback);
 				}
-				clearInterval(interval);
-			}
+				window.clearInterval(interval);
+			}*/
         
         } else {
             console.info('PDF is Loading...');
@@ -25,14 +52,17 @@ function isPDFLoaded(PDFViewerApplication, callback){
  *	因为源代码设置的只加载当前页面以及前后页面，
  *	其他页面中 canvasWrapper 和 textLayer 层会被删除，只有被加载时才重新创建。
  *	同时监听事件也会被删除，所以需要定时器监控，在重新创建 canvasWrapper 和 textLayer 层时重新绑定监听事件。
+ *	在 textlayer 上添加监听，在 canvasWrapper 下的 canvas 层上绘制
  */
 function canvasLoadedCallBack(page, callback){
-	setInterval(loadCanvas, 1000);
+	var interval = setInterval(loadCanvas, 1000);
     function loadCanvas() {
 		var pageLastElement = page.lastElementChild;
 		if(pageLastElement != null && pageLastElement.className == "textLayer"){
-			pageLastElement.addEventListener("click", callback);
+			GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
+			callback();		// 调用传入的回调函数
 			console.log("画布加载成功，添加监听事件");
+			window.clearInterval(interval);
 		}else{
 			console.info('canvasWrapper 还未加载');
 		}
@@ -94,11 +124,27 @@ function domLoaded(element, callback){
 			window.clearTimeout(timer);	/* 清除定时器，防止消耗性能 */
 		}
 	})
+}
 
+/* 判断某个 dom 对象是否加载完毕 */
+function isDomLoaded(element, callback){
+	var interval = setInterval(work, 1000);
+	//GlobalConfig.timer = timer;
+    function work() {
+		if(element.lineAnnotationButton != null){
+			callback();
+			console.log("给按钮绑定事件成功！");
+			window.clearInterval(interval);	/* 清除定时器，防止消耗性能 */
+		}else{
+			console.log("element 还未加载！");
+		}
+    }
 }
 
 export {
     insertAfter,
 	domLoaded,
 	isPDFLoaded,
+	GlobalConfig,
+	isDomLoaded,
 }

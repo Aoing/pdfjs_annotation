@@ -1,4 +1,4 @@
-import { insertAfter } from "./annotation_utils.js"
+import { insertAfter, GlobalConfig } from "./annotation_utils.js"
 //import { PDFViewerApplication } from "../viewer.js"
 
 /* 插入注释工具按钮 */
@@ -22,6 +22,7 @@ class AnnotationBar {
         lineSpan.nodeValue = "Line Annotation";
         // 插入 span 到 button 子元素
         this.lineAnnotationButton.appendChild(lineSpan);
+		GlobalConfig.annotationButton["lineAnnotationButton"] = this.lineAnnotationButton; 
     }
 
     /* 插入存放注释工具集的容器 */

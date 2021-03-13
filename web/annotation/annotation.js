@@ -1,11 +1,7 @@
-import { insertAfter, domLoaded, isPDFLoaded } from "./annotation_utils.js"
+import { insertAfter, domLoaded, isPDFLoaded, GlobalConfig, isDomLoaded } from "./annotation_utils.js"
 import { AnnotationBar } from "./annotation_bar.js"
 import { AppOptions } from "../app_options.js";
-import { PDFViewerApplication } from "../app.js";
 
-const GlobalConfig = {
-	annotations: null,
-}
 /* 注释对象 */
 class Annotation {
     constructor(params) {
@@ -397,9 +393,10 @@ class AnnotationTool {
         const dict = params.dict;
 
 		this.canvas = params.canvas;
-		this.context = this.canvas.getContext("2d");
         this.annotation = params.annotation;
-       
+		this.currentTextLayer = GlobalConfig.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
+		this.context = this.canvas.getContext("2d");
+		
     }
 
 	// 添加注释对象
@@ -477,36 +474,104 @@ class AnnotationTool {
         // 通过路径绘制矩形，避免鼠标绘制时终点与起点相对位置对绘制产生的影响
         this.context.beginPath();
         this.context.fillStyle="#FF0000";
-		this.context.fillRect(rectangle[0], rectangle[1], rectangle[2], rectangle[3]);
+		//this.context.fillRect(rectangle[0], rectangle[1], rectangle[2], rectangle[3]);
+		this.context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
+		this.context.stroke();
     }
 
+	// 鼠标按下操作
+	mouseDown(e){
+		alert(GlobalConfig.currentTextLayer);
+		this.xStart = e.offsetX;
+		this.yStart = e.offsetY;
+		/*this.xStart = e.offsetX - this.canvas.style.left;
+		this.yStart = e.offsetY - this.canvas.style.top;*/
+		var _this = this;		// 当在 mousemove 发生 event 事件时，this 指向了被监听的对象，所以此处需要重新赋值
+		_this.mousemove = function(){
+			_this.mouseMove(e, _this);
+		}
+		this.currentTextLayer.addEventListener("mousemove", _this.mousemove);
+		
+	}
 
+	// 鼠标移动事件
+	mouseMove(e, _this){
+		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
+		_this.x = e.offsetX;
+		_this.y = e.offsetY;
+		/*_this.x = e.offsetX - _this.canvas.style.left;
+		_this.y = e.offsetY - _this.canvas.style.top;*/
+		_this.currentTextLayer.addEventListener("mouseup", _this.mouseUp);
+		//_this.drawRect(_this.xStart, _this.yStart, _this.x, _this.y);
+	}
 
+	// 鼠标弹起事件
+	mousUp(e){
+		_this.x = e.offsetX;
+		_this.y = e.offsetY;
+		/*_this.x = e.offsetX - _this.canvas.style.left;
+		_this.y = e.offsetY - _this.canvas.style.top;*/
+		_this.drawRect(_this.xStart, _this.yStart, _this.x, _this.y);
+		_this.currentTextLayer.removeEventListener("mousemove", _this.mousemove);
+		_this.currentTextLayer.removeEventListener("mouseup", _this.mouseUp);
+	}
+	
 }
 
 /* Annotation 的启动入口方法 */
 function run() {
 
 	var appOptions = AppOptions;
-	var all =appOptions.getAll();
+	var all = appOptions.getAll();
 
-	var draw = function(evt){
-		alert("绘制操作：" + evt.clientY);
-	}
 
-	isPDFLoaded(PDFViewerApplication, draw);
-
-    var annotationBar = new AnnotationBar();
-	
+	/* 创建并插入注释工具 */
+	var annotationBar = new AnnotationBar();
 	var toolbarViewerMiddle = document.getElementById("toolbarViewerMiddle");
-
 	let callback = function(){
 		annotationBar.insertToolBarViewerBottom();
 		annotationBar.insertAnnotationButton();
 	}
+	domLoaded(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具 */
 
-	domLoaded(toolbarViewerMiddle, callback);
+	/* 当直线工具加载成功时，绑定事件 */
+	isDomLoaded(GlobalConfig.annotationButton, function(){
+		if(GlobalConfig.annotationButton.lineAnnotationButton != null){
+			/* 执行绘制操作 */
+			var draw = function(evt){
+				evt = event || window.event;
+				var currentPage = GlobalConfig.currentPage;
+				var canvas = GlobalConfig.canvas;
+				var paramer = {
+					canvas: canvas,
+					dict: []
+				}
+				var annotationTool = new AnnotationTool(paramer);
+				/*if(pageLastElement != null && pageLastElement.className == "textLayer"){
+					pageLastElement.addEventListener("click", callback);
+					GlobalConfig.currentPage = page;	// 将当前页赋值给全局变量，以便于在外部 callback 中使用
+					console.log("画布加载成功，添加监听事件");
+				}*/
 
+				var currentTextLayer = GlobalConfig.currentTextLayer;
+				currentTextLayer.addEventListener("mousedown", annotationTool.mouseDown);
+				/*var cursor = GlobalConfig.currentTextLayer.style.cursor;
+				if(cursor == "" || cursor == "default"){
+					annotationTool.mouseDown(evt);
+					alert("绘制操作：" + evt.currentPage + "_" + evt.pageNumber);
+				}*/
+				alert("绘制操作：");
+
+			}
+
+			GlobalConfig.drawAnnotation = function(){
+				isPDFLoaded(PDFViewerApplication, draw);
+			}
+			
+			GlobalConfig.annotationButton.lineAnnotationButton.addEventListener("click", GlobalConfig.drawAnnotation);
+			
+		}	
+	})
 	/*var timer = null;	
 	// 启动定时器检查，异步判断 dom 是否加载完毕，便于插入元素 
 	let domPromise = new Promise(function(resolve, reject){
