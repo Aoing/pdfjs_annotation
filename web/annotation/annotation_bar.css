@@ -9,3 +9,9 @@
     mask-image: var(--toolbarButton-lineAnnotation-icon);
 }
 
+.annotationCanvas{
+	width: "";
+	height: "";
+	background-color: rgb(41, 29, 214);
+	opacity: 1;
+}

@@ -394,8 +394,10 @@ class AnnotationTool {
 
 		this.canvas = params.canvas;
         this.annotation = params.annotation;
-		this.currentTextLayer = GlobalConfig.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
+		this.currentTextLayer = params.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
 		this.context = this.canvas.getContext("2d");
+
+		//this.context.transform(a,b,c,d,e,f);	// 变换，原来 canvas 被缩小了一倍
 		
     }
 
@@ -474,56 +476,162 @@ class AnnotationTool {
         // 通过路径绘制矩形，避免鼠标绘制时终点与起点相对位置对绘制产生的影响
         this.context.beginPath();
         this.context.fillStyle="#FF0000";
+		this.context.strokeStyle ="black";
+		this.context.lineWidth = 6;
 		//this.context.fillRect(rectangle[0], rectangle[1], rectangle[2], rectangle[3]);
-		this.context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
+		this.context.rect(rectangle[0], rectangle[1], 200, 200);
+		//this.context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
 		this.context.stroke();
     }
 
+	// 绘制直线
+	drawLine(rectangle){
+		this.context.clearRect(0,0,800,1200);
+		this.context.fillStyle="black";
+		this.context.save();
+		this.context.transform(1,0,0,-1,0,0);
+		this.context.moveTo(rectangle[0], rectangle[1]);
+		this.context.lineTo(rectangle[2], rectangle[3]);
+		this.context.stroke();
+		this.context.restore();
+		console.log("绘制直线：" + rectangle);
+	}
+
+	/* 绑定绘制事件 */
+	drawEvent(){
+		//var e = event || window.event ;
+		var _this = this;		// 当在 mousemove 发生 event 事件时，this 指向了被监听的对象，所以此处需要重新赋值
+		GlobalConfig.this = this;
+		EventUtil.addHandler(GlobalConfig.this.currentTextLayer, "mousedown",  GlobalConfig.this.mouseDown);
+		//GlobalConfig.this.currentTextLayer.addEventListener("mousedown", GlobalConfig.this.mouseDown);
+
+	}
+
 	// 鼠标按下操作
 	mouseDown(e){
-		alert(GlobalConfig.currentTextLayer);
-		this.xStart = e.offsetX;
-		this.yStart = e.offsetY;
+		e = event || window.event;
+		var _this = GlobalConfig.this;
+		//alert(GlobalConfig.currentTextLayer);
+		_this.xStart = e.offsetX;
+		_this.yStart = e.offsetY;
+		//_this.canvas.style.backgroundColor = "red";
 		/*this.xStart = e.offsetX - this.canvas.style.left;
 		this.yStart = e.offsetY - this.canvas.style.top;*/
-		var _this = this;		// 当在 mousemove 发生 event 事件时，this 指向了被监听的对象，所以此处需要重新赋值
-		_this.mousemove = function(){
-			_this.mouseMove(e, _this);
-		}
-		this.currentTextLayer.addEventListener("mousemove", _this.mousemove);
+		/*_this.currentTextLayer.addEventListener("mousemove", _this.mouseMove);
+		_this.currentTextLayer.addEventListener("mouseup", _this.mouseUp);*/
+		EventUtil.addHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
+		EventUtil.addHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
+		console.log("mouseDown: "+e.offsetX);
 		
 	}
 
 	// 鼠标移动事件
-	mouseMove(e, _this){
+	mouseMove(e){
+		e = event || window.event;
+		var _this = GlobalConfig.this;
+		_this.context.clearRect(0, 0, 800, 800);	//	先清除画布
 		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
 		_this.x = e.offsetX;
 		_this.y = e.offsetY;
 		/*_this.x = e.offsetX - _this.canvas.style.left;
 		_this.y = e.offsetY - _this.canvas.style.top;*/
-		_this.currentTextLayer.addEventListener("mouseup", _this.mouseUp);
+		var rect = [
+			_this.xStart, 
+			_this.yStart, 
+			_this.x, 
+			_this.y
+		]
+		
+		_this.drawLine(rect);
 		//_this.drawRect(_this.xStart, _this.yStart, _this.x, _this.y);
+		console.log("mouseMove: "+e.offsetX);
 	}
 
 	// 鼠标弹起事件
-	mousUp(e){
+	mouseUp(e){
+		e = event || window.event;
+		var _this = GlobalConfig.this;
 		_this.x = e.offsetX;
 		_this.y = e.offsetY;
+		var rect = [
+			_this.xStart, 
+			_this.yStart, 
+			_this.x, 
+			_this.y
+		]
 		/*_this.x = e.offsetX - _this.canvas.style.left;
 		_this.y = e.offsetY - _this.canvas.style.top;*/
-		_this.drawRect(_this.xStart, _this.yStart, _this.x, _this.y);
-		_this.currentTextLayer.removeEventListener("mousemove", _this.mousemove);
-		_this.currentTextLayer.removeEventListener("mouseup", _this.mouseUp);
+		_this.context.clearRect(0, 0, 800, 800);	//	先清除画布
+		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
+		_this.drawRect(rect);
+		/*_this.currentTextLayer.removeEventListener("mousemove", _this.mouseMove);
+		_this.currentTextLayer.removeEventListener("mouseup", _this.mouseUp);*/
+		EventUtil.removeHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
+		EventUtil.removeHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
+		console.log("mouseup: "+ rect);
 	}
 	
+	
 }
+
+// 添加事件的方法
+class EventUtil{
+
+	constructor(params) {
+
+    }
+
+
+    static addHandler(element, type, handler){
+        // 先判斷是否存在該事件，如果不存在加入，否則不加入
+        let name = "element.tagName=" + element.tagName + "&element.mark="+ element.getAttribute("mark") + "&type=" + type + "&handler.name=" + handler.name;
+        // let name = element.tagName + "_" + type + "_" + handler.name;
+        if (GlobalConfig.eventBus != null) {
+            for (let i = 0; i < GlobalConfig.eventBus.length; i++){
+                if (name == GlobalConfig.eventBus[i]){
+                    return;
+                }
+            }
+            GlobalConfig.eventBus.push(name);
+        };
+
+        if (element.addEventListener){ //如果存在 DOM2 级方法
+            element.addEventListener(type, handler, false);
+        } else if (element.attachEvent){ //如果存在的是 IE 的方法
+            element.attachEvent("on" + type, handler); //为了在 IE8 及更早版本中运行，此时的事件类型必须加上"on"前缀。
+        } else { //是使用 DOM0 级方法
+            element["on" + type] = handler;
+        };
+
+    }
+
+    static removeHandler(element, type, handler){
+        if (element.removeEventListener){ //如果存在 DOM2 级方法
+            element.removeEventListener(type, handler, false);
+        } else if (element.detachEvent){ //如果存在的是 IE 的方法
+            element.detachEvent("on" + type, handler); //为了在 IE8 及更早版本中运行，此时的事件类型必须加上"on"前缀。
+        } else { //是使用 DOM0 级方法
+            element["on" + type] = null;
+        }
+
+        let name = "element.tagName=" + element.tagName + "&element.mark="+ element.getAttribute("mark") + "&type=" + type + "&handler.name=" + handler.name;
+        if (GlobalConfig.eventBus != null) {
+            for (let i = 0; i < GlobalConfig.eventBus.length; i++){
+                if (name == GlobalConfig.eventBus[i]){
+                    // 移除保存的事件
+                    GlobalConfig.eventBus.splice(i, 1);
+                }
+            }
+        };
+    }
+
+};
 
 /* Annotation 的启动入口方法 */
 function run() {
 
 	var appOptions = AppOptions;
 	var all = appOptions.getAll();
-
 
 	/* 创建并插入注释工具 */
 	var annotationBar = new AnnotationBar();
@@ -540,10 +648,10 @@ function run() {
 			/* 执行绘制操作 */
 			var draw = function(evt){
 				evt = event || window.event;
-				var currentPage = GlobalConfig.currentPage;
-				var canvas = GlobalConfig.canvas;
 				var paramer = {
-					canvas: canvas,
+					currentPageViewer: GlobalConfig.currentPageViewer,
+					canvas: GlobalConfig.canvas,
+					currentTextLayer: GlobalConfig.currentTextLayer,
 					dict: []
 				}
 				var annotationTool = new AnnotationTool(paramer);
@@ -554,13 +662,14 @@ function run() {
 				}*/
 
 				var currentTextLayer = GlobalConfig.currentTextLayer;
-				currentTextLayer.addEventListener("mousedown", annotationTool.mouseDown);
+				annotationTool.drawEvent();
+				//currentTextLayer.addEventListener("mousedown", annotationTool.mouseDown);
 				/*var cursor = GlobalConfig.currentTextLayer.style.cursor;
 				if(cursor == "" || cursor == "default"){
 					annotationTool.mouseDown(evt);
 					alert("绘制操作：" + evt.currentPage + "_" + evt.pageNumber);
 				}*/
-				alert("绘制操作：");
+				alert(`更新渲染下一页: ${GlobalConfig.page}！`);
 
 			}
 
@@ -568,7 +677,8 @@ function run() {
 				isPDFLoaded(PDFViewerApplication, draw);
 			}
 			
-			GlobalConfig.annotationButton.lineAnnotationButton.addEventListener("click", GlobalConfig.drawAnnotation);
+			EventUtil.addHandler(GlobalConfig.annotationButton.lineAnnotationButton, "click", GlobalConfig.drawAnnotation);
+			//GlobalConfig.annotationButton.lineAnnotationButton.addEventListener("click", GlobalConfig.drawAnnotation);
 			
 		}	
 	})
@@ -592,6 +702,14 @@ function run() {
      
     // getAllCanvas();
 
+/*	document.getElementById("testButton").addEventListener("click", function(){
+		// only jpeg is supported by jsPDF
+		var imgData = GlobalConfig.canvas.toDataURL("image/jpeg", 1.0);
+		var pdf = new jsPDF();
+	  
+		pdf.addImage(imgData, 'JPEG', 0, 0);
+		pdf.save("download.pdf");
+	  }, false);*/
 }
 
 export {

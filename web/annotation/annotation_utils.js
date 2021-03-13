@@ -3,30 +3,52 @@ import { PDFViewerApplication } from "../app.js";
 
 const GlobalConfig = {
 	annotations: null,
-	currentPage: null,
+	currentPageViewer: null,
 	currentTextLayer: null,
 	annotationButton: {},
 	pdfViewerApplication: null,
 	drawAnnotation: null,
 	canvas: null,
+	page: null,
+	this: null,
+	eventBus: null,
+	eventUtil: null,
 }
 
-/* 判断当前页是否加载完毕 */
 
-/* 判断文档以及每一页的 canvas 标签是否加载完毕 */
+/* 判断文档以及每一页的 canvas 标签是否加载完毕，如果加载完毕执行回调函数 */
 function isPDFLoaded(PDFViewerApplication, callback){
 	var interval = setInterval(loadPdf, 1000);
     function loadPdf() {
         if (PDFViewerApplication.pdfDocument != null) {
 			GlobalConfig.pdfViewerApplication = PDFViewerApplication;
-			var page = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page);	// 获取当前页面当前页
+			var pageViewer = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page);	// 获取当前页面当前页
 			var pageList = PDFViewerApplication.pdfViewer.viewer.childNodes;
-			if(page != null && GlobalConfig.currentPage != page){
-				GlobalConfig.currentPage = page;	// 将当前页赋值给全局变量，以便于在外部 callback 中使用
-				GlobalConfig.canvas = page.canvas;
+			if(pageViewer != null && GlobalConfig.currentPageViewer != pageViewer){
+				GlobalConfig.currentPageViewer = pageViewer;	// 将当前页赋值给全局变量，以便于在外部 callback 中使用
+				//GlobalConfig.canvas = pageViewer.canvas;
+				GlobalConfig.page = PDFViewerApplication.page;
 				var pageLastElement = pageList[PDFViewerApplication.page - 1].lastElementChild;
-				if(pageLastElement != null && pageLastElement.className == "textLayer"){
+				var canvas = pageList[PDFViewerApplication.page - 1].childNodes[0].childNodes[0];
+				if(pageLastElement != null && pageLastElement.className == "textLayer" && canvas != null && canvas.tagName.toLocaleLowerCase() == "canvas" ){
+					
+					pageLastElement.setAttribute("mark", PDFViewerApplication.page);	//作为添加事件总线唯一性标识
+					
+					/*GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
+					GlobalConfig.canvas = canvas;	// 将当前设置监听事件的文本层传给全局*/
+
+					// 创建注释层 annotationCanvas，使用自己的注释层
+					var annotationCanvas = document.createElement("canvas");
+					//var annotationCanvas = canvas.cloneNode(true);	// 复制 canvas 及其样式
+					//	插入到文本层的第一个元素，这样文本层的子元素中， 
+					//	annotationCanvas 处于第一个位置， span 文字层覆盖其上，就可以同时进行选中文字和绘制注释
+					addClass(annotationCanvas, "annotationCanvas");
+					annotationCanvas.width = pageLastElement.style.width.slice(0, pageLastElement.style.width.length-2);
+					annotationCanvas.height = pageLastElement.style.height.slice(0, pageLastElement.style.height.length-2);
+					insertBeforeFirstChild(pageLastElement, annotationCanvas);
 					GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
+					GlobalConfig.canvas = annotationCanvas;	// 将当前设置监听事件的文本层传给全局
+
 					callback();		// 调用传入的回调函数
 					console.log("画布加载成功，添加监听事件");
 					//window.clearInterval(interval);
@@ -34,65 +56,35 @@ function isPDFLoaded(PDFViewerApplication, callback){
 					console.info('当前页面 canvasWrapper 还未加载');
 				}
 			}
-			/*if(pageList != null ){
-				for (let i = 0; i < pageList.length; i++) {
-					const page = pageList[i];
-					canvasLoadedCallBack(page, callback);
-				}
-				window.clearInterval(interval);
-			}*/
-        
         } else {
-            console.info('PDF is Loading...');
+            console.info('Loading...');
         }
     }
 }
 
-/*	监听：每当有页面加载完毕时，执行回调函数 
- *	因为源代码设置的只加载当前页面以及前后页面，
- *	其他页面中 canvasWrapper 和 textLayer 层会被删除，只有被加载时才重新创建。
- *	同时监听事件也会被删除，所以需要定时器监控，在重新创建 canvasWrapper 和 textLayer 层时重新绑定监听事件。
- *	在 textlayer 上添加监听，在 canvasWrapper 下的 canvas 层上绘制
- */
-function canvasLoadedCallBack(page, callback){
-	var interval = setInterval(loadCanvas, 1000);
-    function loadCanvas() {
-		var pageLastElement = page.lastElementChild;
-		if(pageLastElement != null && pageLastElement.className == "textLayer"){
-			GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
-			callback();		// 调用传入的回调函数
-			console.log("画布加载成功，添加监听事件");
-			window.clearInterval(interval);
-		}else{
-			console.info('canvasWrapper 还未加载');
-		}
+/* 追加样式 */
+function addClass(element, value) {
+    if (!element.className) {
+        element.className = value;
+    } else {
+        newClassName = element.className;
+        newClassName += " "; //这句代码追加的类名分开
+        newClassName += value;
+        element.className = newClassName;
     }
 }
 
-/* 获取所有的 canvas 对象 */
-/*function getAllCanvasWrapper() {
-    var canvasWrapperList = {}; // 所有 canvas 集合
-    const viewerDiv = document.getElementById("viewer");
-    const pages = viewerDiv.childNodes;
-    if (pages != null) {
-        for (let i = 0; i < pages.length; i++) {
-            const page = pages[i];
-            let pageNumber = page.getAttribute("data-page-number");
-            const canvasWrapper = page.childNodes;
-            if (canvasWrapper != null) {
-				for (let j = 0; j < canvasWrapper.length; j++) {
-					if("canvasWrapper" == canvasWrapper[j].getAttribute("class")){
-						canvasWrapperList[pageNumber]=canvasWrapper[j];
-						break;
-					}
-				}
-            }
-
-            return canvasWrapperList;
-        }
-    }
+/* 插入到父元素的第一个子元素位置 */
+function insertBeforeFirstChild(parentElement, target){
+	var childNodes = parentElement.childNodes;
+	if(childNodes == null){
+		parentElement.appendChild(target);
+	}else{
+		var firstChild = childNodes[0];
+		parentElement.insertBefore(target, firstChild);
+	}
 }
-*/
+
 /* 在一个元素 element 后面插入一个新元素 target */
 function insertAfter(element, target) {
     var nextElement = element.nextElenmentSibling;
