@@ -16,6 +16,9 @@
 import { AppOptions } from "./app_options.js";
 import { PDFViewerApplication } from "./app.js";
 
+/* 赵庆：引入 Annotation 库 */
+import { run } from "./annotation/annotation.js";
+
 /* eslint-disable-next-line no-unused-vars */
 const pdfjsVersion =
   typeof PDFJSDev !== "undefined" ? PDFJSDev.eval("BUNDLE_VERSION") : void 0;
@@ -244,5 +247,8 @@ if (
 } else {
   document.addEventListener("DOMContentLoaded", webViewerLoad, true);
 }
+
+/* 赵庆：启动 Annotation */
+run();
 
 export { PDFViewerApplication, AppOptions as PDFViewerApplicationOptions };

@@ -1,0 +1,11 @@
+@import url(../pdf_viewer.css);
+:root {
+    /* 新增 */
+    --toolbarButton-lineAnnotation-icon: url(../images/toolbarButton-lineAnnotation.svg);
+}
+
+.toolbarButton#lineAnnotation::before {
+    -webkit-mask-image: var(--toolbarButton-lineAnnotation-icon);
+    mask-image: var(--toolbarButton-lineAnnotation-icon);
+}
+
