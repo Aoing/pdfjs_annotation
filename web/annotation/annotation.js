@@ -462,20 +462,16 @@ class AnnotationTool {
         };
     }
 
-	// 绘制单个注释
-    drawAnnotation(annotation){
-        if (annotation != null){
-			this.rectangle = annotation.rectangle;
-            switch (annotation.subtype) {
-                case "R" :
-                    this.context.beginPath();
-					this.context.fillStyle="#FF0000";
-					this.context.fillRect(rectangle[0], rectangle[1], rectangle[2], rectangle[3]);
+	// 根据点击的注释按钮类型绘制注释
+    drawAnnotation(rectangle){
+        if (rectangle != null){
+			//this.rectangle = annotation.rectangle;
+            switch (GlobalConfig.annotationType) {
+                case "line" :
+                    this.drawLine(rectangle);
                     break;
-                case "C" :
-                    this.context.beginPath();
-					this.context.arc(rectangle[0],rectangle[1],Math.abs((rectangle[1] - rectangle[0]))/2,0,2*Math.PI);
-					this.context.stroke();
+                case "rect" :
+                    this.drawRect(rectangle)
                     break;
                 default :
                     break;
@@ -484,26 +480,17 @@ class AnnotationTool {
     }
 
 	// 绘制矩形
-    drawRect (context, rectangle) {
-		/*context.beginPath();
-		context.rect(rectangle[0], rectangle[1], Math.abs(rectangle[2] - rectangle[0]), Math.abs(rectangle[3] - rectangle[1]));
-		*/
-		// 通过路径绘制矩形，避免鼠标绘制时终点与起点相对位置对绘制产生的影响
-		//this.context.transform(1,0,0,-1,0,0);
-		context.strokeStyle ="black";
-		context.lineWidth = 6;
-		var lineWidth = context.lineWidth;
+    drawRect (rectangle) {
 		this.context.beginPath();
-		this.context.moveTo(rectangle[0],rectangle[1]);
-		this.context.lineTo(rectangle[0], rectangle[3]);
-		this.context.lineTo(rectangle[2], rectangle[3]);
-		this.context.lineTo(rectangle[2], rectangle[1]);
-		this.context.lineTo(rectangle[0] - lineWidth / 2, rectangle[1]);
-		context.stroke();
+		this.context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
+		this.context.strokeStyle ="black";
+		this.context.lineWidth = 5;
+		this.context.stroke();
     }
 
 	// 绘制直线
-	drawLine(context, rectangle){
+	drawLine(rectangle){
+		this.context.beginPath();
 		this.context.fillStyle="black";
 		this.context.save();
 		this.context.moveTo(rectangle[0], rectangle[1]);
@@ -552,7 +539,7 @@ class AnnotationTool {
 		]
 		
 		/* 此处应该是绘制拉选框的注释 */
-		_this.drawRect(_this.context, rect);
+		_this.drawAnnotation(rect);
 
 		console.log("mouseMove: "+e.offsetX);
 	}
@@ -567,19 +554,6 @@ class AnnotationTool {
 			_this.x, 
 			_this.y
 		]
-		/*_this.xEnd = e.offsetX;
-		_this.yEnd = e.offsetY;
-		var rect = [
-			_this.xStart, 
-			_this.yStart, 
-			_this.xEnd, 
-			-1 * _this.yEnd
-		]*/
-		/*_this.x = e.offsetX - _this.canvas.style.left;
-		_this.y = e.offsetY - _this.canvas.style.top;*/
-		//_this.context.clearRect(0, 0, 100, 100);	//	先清除画布
-		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
-		//_this.drawRect(_this.context, rect);
 
 		/* 重置 x,y 坐标 */
 		_this.reset();
@@ -599,6 +573,10 @@ class EventUtil{
 
     }
 
+	/* 设置唯一事件 */
+	static distributeEvent(){
+		//GlobalConfig.eventBus.
+	}
 
     static addHandler(element, type, handler){
         // 先判斷是否存在該事件，如果不存在加入，否則不加入
@@ -648,83 +626,77 @@ class EventUtil{
 /* Annotation 的启动入口方法 */
 function run() {
 
-	
 	var toolbarViewerMiddle = document.getElementById("toolbarViewerMiddle");
-	let callback = function(){
+	
+	var callback = function(){
+
+		// 创建直线按钮
 		var lineAnnotationButton = new AnnotationButton({
 			id: "lineAnnotationButton",
 			name: "lineAnnotationButton",
 			type: "button",
-			class: "toolbarButton",
-			title: "Line Tool",
-			"data-l10n-id": "line_annotation",
 			spanNodeValue: "Line Annotation",
 			attributes: {
 				class: "toolbarButton",
+				annotationType: "line",
+				title: "Line Tool",
+				"data-l10n-id": "line_annotation",
 			}
 		});
+
+		// 创建矩形按钮
 		var rectAnnotationButton = new AnnotationButton({
 			id: "rectAnnotationButton",
 			name: "rectAnnotationButton",
 			type: "button",
-			class: "toolbarButton",
-			title: "Rect Tool",
-			"data-l10n-id": "rect_annotation",
 			spanNodeValue: "Rect Annotation",
 			attributes: {
 				class: "toolbarButton",
+				annotationType: "rect",
+				title: "Rect Tool",
+				"data-l10n-id": "rect_annotation",
 			}
 		});
 
-		/* 创建并插入注释工具 */
-		var annotationBar = new AnnotationBar({
+		/* 创建注释工具容器并插入注释工具 */
+		new AnnotationBar({
 			annotationButtons: [lineAnnotationButton.createElement(), rectAnnotationButton.createElement()]
-		});
-		annotationBar.create();
-		
-		//annotationBar.insertToolBarViewerBottom();
-		//annotationBar.insertAnnotationButton();
+		}).create();
+
 	}
+
 	domLoaded(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具 */
 
-	/* 当直线工具加载成功时，绑定事件 */
+	/* 当注释工具加载成功时，绑定事件 */
 	isDomLoaded(GlobalConfig.annotationButton, function(){
-		if(GlobalConfig.annotationButton.lineAnnotationButton != null){
-			/* 执行绘制操作 */
-			var draw = function(evt){
-				evt = event || window.event;
-				var paramer = {
-					currentPageViewer: GlobalConfig.currentPageViewer,
-					canvas: GlobalConfig.canvas,
-					annotationTempCanvas: GlobalConfig.annotationTempCanvas,
-					currentTextLayer: GlobalConfig.currentTextLayer,
-					dict: []
+		for (var key in GlobalConfig.annotationButton) {
+			var annotationButton = GlobalConfig.annotationButton[key];
+			if(annotationButton != null){
+				/* 执行绘制操作 */
+				var draw = function(evt){
+					evt = event || window.event;
+					var paramer = {
+						currentPageViewer: GlobalConfig.currentPageViewer,
+						canvas: GlobalConfig.canvas,
+						annotationTempCanvas: GlobalConfig.annotationTempCanvas,
+						currentTextLayer: GlobalConfig.currentTextLayer,
+						dict: []
+					}
+					var annotationTool = new AnnotationTool(paramer);
+					annotationTool.drawEvent();
+					alert(`更新渲染下一页: ${GlobalConfig.page}！`);
+	
 				}
-				var annotationTool = new AnnotationTool(paramer);
-				/*if(pageLastElement != null && pageLastElement.className == "textLayer"){
-					pageLastElement.addEventListener("click", callback);
-					GlobalConfig.currentPage = page;	// 将当前页赋值给全局变量，以便于在外部 callback 中使用
-					console.log("画布加载成功，添加监听事件");
-				}*/
-
-				var currentTextLayer = GlobalConfig.currentTextLayer;
-				annotationTool.drawEvent();
-				//currentTextLayer.addEventListener("mousedown", annotationTool.mouseDown);
-				/*var cursor = GlobalConfig.currentTextLayer.style.cursor;
-				if(cursor == "" || cursor == "default"){
-					annotationTool.mouseDown(evt);
-					alert("绘制操作：" + evt.currentPage + "_" + evt.pageNumber);
-				}*/
-				alert(`更新渲染下一页: ${GlobalConfig.page}！`);
-
+	
+				GlobalConfig.drawAnnotation = function(){
+					GlobalConfig.annotationType = this.getAttribute("annotationType");	// 标记处于激活状态的注释按钮类型，便于绘制之前先判断按钮类型
+					isPDFLoaded(PDFViewerApplication, draw);
+				}
+				
+				EventUtil.addHandler(annotationButton, "click", GlobalConfig.drawAnnotation);
+				//GlobalConfig.annotationButton.lineAnnotationButton.addEventListener("click", GlobalConfig.drawAnnotation);
+				
 			}
-
-			GlobalConfig.drawAnnotation = function(){
-				isPDFLoaded(PDFViewerApplication, draw);
-			}
-			
-			EventUtil.addHandler(GlobalConfig.annotationButton.lineAnnotationButton, "click", GlobalConfig.drawAnnotation);
-			//GlobalConfig.annotationButton.lineAnnotationButton.addEventListener("click", GlobalConfig.drawAnnotation);
 			
 		}	
 	})

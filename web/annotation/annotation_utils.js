@@ -1,3 +1,4 @@
+/* 赵庆：工具库，以及全局配置 */
 import { AnnotationBar } from "./annotation_bar.js"
 import { PDFViewerApplication } from "../app.js";
 
@@ -13,6 +14,8 @@ const GlobalConfig = {
 	this: null,
 	eventBus: null,
 	eventUtil: null,
+	annotationType: null,
+
 }
 
 
@@ -126,7 +129,7 @@ function isDomLoaded(element, callback){
 	var interval = setInterval(work, 1000);
 	//GlobalConfig.timer = timer;
     function work() {
-		if(element.lineAnnotationButton != null){
+		if(element != null){
 			callback();
 			console.log("给按钮绑定事件成功！");
 			window.clearInterval(interval);	/* 清除定时器，防止消耗性能 */
