@@ -393,13 +393,26 @@ class AnnotationTool {
         const dict = params.dict;
 
 		this.canvas = params.canvas;
+		this.annotationTempCanvas = params.annotationTempCanvas;	// 绘制拉选框的画布层
         this.annotation = params.annotation;
 		this.currentTextLayer = params.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
 		this.context = this.canvas.getContext("2d");
+		//this.annotationTempContext = this.annotationTempCanvas.getContext("2d");
+		//this.annotationTempContext.clearRect(0, 0, this.annotationTempContext.width, this.annotationTempContext.height);
 
+		
 		//this.context.transform(a,b,c,d,e,f);	// 变换，原来 canvas 被缩小了一倍
 		
     }
+
+	reset(){
+		this.x = null;
+		this.y = null;
+		this.xStart = null;
+		this.yStart = null;
+		this.xEnd = null;
+		this.yEnd = null;
+	}
 
 	// 添加注释对象
     addAnnotation() {
@@ -471,30 +484,31 @@ class AnnotationTool {
     }
 
 	// 绘制矩形
-    drawRect (rectangle) {
-
-        // 通过路径绘制矩形，避免鼠标绘制时终点与起点相对位置对绘制产生的影响
-        this.context.beginPath();
-        this.context.fillStyle="#FF0000";
-		this.context.strokeStyle ="black";
-		this.context.lineWidth = 6;
-		//this.context.fillRect(rectangle[0], rectangle[1], rectangle[2], rectangle[3]);
-		this.context.rect(rectangle[0], rectangle[1], 200, 200);
-		//this.context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
-		this.context.stroke();
+    drawRect (context, rectangle) {
+		/*context.beginPath();
+		context.rect(rectangle[0], rectangle[1], Math.abs(rectangle[2] - rectangle[0]), Math.abs(rectangle[3] - rectangle[1]));
+		*/
+		// 通过路径绘制矩形，避免鼠标绘制时终点与起点相对位置对绘制产生的影响
+		//this.context.transform(1,0,0,-1,0,0);
+		context.strokeStyle ="black";
+		context.lineWidth = 6;
+		var lineWidth = context.lineWidth;
+		this.context.beginPath();
+		this.context.moveTo(rectangle[0],rectangle[1]);
+		this.context.lineTo(rectangle[0], rectangle[3]);
+		this.context.lineTo(rectangle[2], rectangle[3]);
+		this.context.lineTo(rectangle[2], rectangle[1]);
+		this.context.lineTo(rectangle[0] - lineWidth / 2, rectangle[1]);
+		context.stroke();
     }
 
 	// 绘制直线
-	drawLine(rectangle){
-		this.context.clearRect(0,0,800,1200);
+	drawLine(context, rectangle){
 		this.context.fillStyle="black";
 		this.context.save();
-		this.context.transform(1,0,0,-1,0,0);
 		this.context.moveTo(rectangle[0], rectangle[1]);
 		this.context.lineTo(rectangle[2], rectangle[3]);
 		this.context.stroke();
-		this.context.restore();
-		console.log("绘制直线：" + rectangle);
 	}
 
 	/* 绑定绘制事件 */
@@ -514,11 +528,6 @@ class AnnotationTool {
 		//alert(GlobalConfig.currentTextLayer);
 		_this.xStart = e.offsetX;
 		_this.yStart = e.offsetY;
-		//_this.canvas.style.backgroundColor = "red";
-		/*this.xStart = e.offsetX - this.canvas.style.left;
-		this.yStart = e.offsetY - this.canvas.style.top;*/
-		/*_this.currentTextLayer.addEventListener("mousemove", _this.mouseMove);
-		_this.currentTextLayer.addEventListener("mouseup", _this.mouseUp);*/
 		EventUtil.addHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
 		EventUtil.addHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
 		console.log("mouseDown: "+e.offsetX);
@@ -529,7 +538,7 @@ class AnnotationTool {
 	mouseMove(e){
 		e = event || window.event;
 		var _this = GlobalConfig.this;
-		_this.context.clearRect(0, 0, 800, 800);	//	先清除画布
+		_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
 		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
 		_this.x = e.offsetX;
 		_this.y = e.offsetY;
@@ -542,8 +551,9 @@ class AnnotationTool {
 			_this.y
 		]
 		
-		_this.drawLine(rect);
-		//_this.drawRect(_this.xStart, _this.yStart, _this.x, _this.y);
+		/* 此处应该是绘制拉选框的注释 */
+		_this.drawRect(_this.context, rect);
+
 		console.log("mouseMove: "+e.offsetX);
 	}
 
@@ -551,21 +561,29 @@ class AnnotationTool {
 	mouseUp(e){
 		e = event || window.event;
 		var _this = GlobalConfig.this;
-		_this.x = e.offsetX;
-		_this.y = e.offsetY;
 		var rect = [
 			_this.xStart, 
 			_this.yStart, 
 			_this.x, 
 			_this.y
 		]
+		/*_this.xEnd = e.offsetX;
+		_this.yEnd = e.offsetY;
+		var rect = [
+			_this.xStart, 
+			_this.yStart, 
+			_this.xEnd, 
+			-1 * _this.yEnd
+		]*/
 		/*_this.x = e.offsetX - _this.canvas.style.left;
 		_this.y = e.offsetY - _this.canvas.style.top;*/
-		_this.context.clearRect(0, 0, 800, 800);	//	先清除画布
+		//_this.context.clearRect(0, 0, 100, 100);	//	先清除画布
 		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
-		_this.drawRect(rect);
-		/*_this.currentTextLayer.removeEventListener("mousemove", _this.mouseMove);
-		_this.currentTextLayer.removeEventListener("mouseup", _this.mouseUp);*/
+		//_this.drawRect(_this.context, rect);
+
+		/* 重置 x,y 坐标 */
+		_this.reset();
+
 		EventUtil.removeHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
 		EventUtil.removeHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
 		console.log("mouseup: "+ rect);
@@ -651,6 +669,7 @@ function run() {
 				var paramer = {
 					currentPageViewer: GlobalConfig.currentPageViewer,
 					canvas: GlobalConfig.canvas,
+					annotationTempCanvas: GlobalConfig.annotationTempCanvas,
 					currentTextLayer: GlobalConfig.currentTextLayer,
 					dict: []
 				}

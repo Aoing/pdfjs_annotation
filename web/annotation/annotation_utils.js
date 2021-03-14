@@ -37,21 +37,24 @@ function isPDFLoaded(PDFViewerApplication, callback){
 					/*GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
 					GlobalConfig.canvas = canvas;	// 将当前设置监听事件的文本层传给全局*/
 
-					// 创建注释层 annotationCanvas，使用自己的注释层
-					var annotationCanvas = document.createElement("canvas");
-					//var annotationCanvas = canvas.cloneNode(true);	// 复制 canvas 及其样式
-					//	插入到文本层的第一个元素，这样文本层的子元素中， 
-					//	annotationCanvas 处于第一个位置， span 文字层覆盖其上，就可以同时进行选中文字和绘制注释
-					addClass(annotationCanvas, "annotationCanvas");
-					annotationCanvas.width = pageLastElement.style.width.slice(0, pageLastElement.style.width.length-2);
-					annotationCanvas.height = pageLastElement.style.height.slice(0, pageLastElement.style.height.length-2);
-					insertBeforeFirstChild(pageLastElement, annotationCanvas);
-					GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
-					GlobalConfig.canvas = annotationCanvas;	// 将当前设置监听事件的文本层传给全局
+					// 如果 canvas 不存在就创建注释层 annotationCanvas，使用自己的注释层
+					var annotationCanvas = document.getElementById("annotationCanvas_" + GlobalConfig.page);
+					if(annotationCanvas == null){
+						annotationCanvas = document.createElement("canvas");
+						//	插入到文本层的第一个元素，这样文本层的子元素中， 
+						//	annotationCanvas 处于第一个位置， span 文字层覆盖其上，就可以同时进行选中文字和绘制注释
+						annotationCanvas.id = "annotationCanvas_" + GlobalConfig.page;
+						annotationCanvas.width = pageLastElement.style.width.slice(0, pageLastElement.style.width.length-2);
+						annotationCanvas.height = pageLastElement.style.height.slice(0, pageLastElement.style.height.length-2);
+						addClass(annotationCanvas, "annotationCanvas");
+						insertBeforeFirstChild(pageLastElement.parentElement, annotationCanvas);	// 插入到 page div 的第一个子元素位置
+						GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
+						GlobalConfig.canvas = annotationCanvas;	// 将当前设置监听事件的文本层传给全局
 
-					callback();		// 调用传入的回调函数
-					console.log("画布加载成功，添加监听事件");
-					//window.clearInterval(interval);
+						callback();		// 调用传入的回调函数
+						console.log("画布加载成功，添加监听事件");
+						//window.clearInterval(interval);
+					}
 				}else{
 					console.info('当前页面 canvasWrapper 还未加载');
 				}

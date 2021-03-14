@@ -12,6 +12,8 @@
 .annotationCanvas{
 	width: "";
 	height: "";
-	background-color: rgb(41, 29, 214);
+	/*background-color: rgb(41, 29, 214);*/
 	opacity: 1;
+	z-index: 0px;
+	position: absolute;
 }
