@@ -16,7 +16,7 @@ const GlobalConfig = {
 	eventBus: null,
 	eventUtil: null,
 	annotationType: null,
-
+	mouseState: null,
 }
 
 
@@ -37,10 +37,6 @@ function isPDFLoaded(PDFViewerApplication, callback){
 				if(pageLastElement != null && pageLastElement.className == "textLayer" && canvas != null && canvas.tagName.toLocaleLowerCase() == "canvas" ){
 					
 					pageLastElement.setAttribute("mark", PDFViewerApplication.page);	//作为添加事件总线唯一性标识
-					
-					/*GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
-					GlobalConfig.canvas = canvas;	// 将当前设置监听事件的文本层传给全局*/
-
 					// 如果 canvas 不存在就创建注释层 annotationCanvas，使用自己的注释层
 					var annotationCanvas = document.getElementById("annotationCanvas_" + GlobalConfig.page);
 					if(annotationCanvas == null){
@@ -54,10 +50,22 @@ function isPDFLoaded(PDFViewerApplication, callback){
 						insertBeforeFirstChild(pageLastElement.parentElement, annotationCanvas);	// 插入到 page div 的第一个子元素位置
 						GlobalConfig.currentTextLayer = pageLastElement;	// 将当前设置监听事件的文本层传给全局
 						GlobalConfig.canvas = annotationCanvas;	// 将当前设置监听事件的文本层传给全局
-
+						// 判断鼠标状态，调换注释层和文本层位置
+						switch(GlobalConfig.mouseState){
+							case "annotation":
+								GlobalConfig.canvas.style.zIndex = 1;	//将注释层置于最上层，点击选择文字工具时再将其置于文本层下
+								break;
+							case "selecttext":
+								GlobalConfig.canvas.style.zIndex = 0;	
+								break;
+							default:
+								GlobalConfig.canvas.style.zIndex = 1;	//将注释层置于最上层，点击选择文字工具时再将其置于文本层下
+								break;
+						}
 						callback();		// 调用传入的回调函数
 						console.log("画布加载成功，添加监听事件");
-						//window.clearInterval(interval);
+					}else{
+						
 					}
 				}else{
 					console.info('当前页面 canvasWrapper 还未加载');

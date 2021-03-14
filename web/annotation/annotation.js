@@ -391,7 +391,6 @@ class AnnotationTool {
     constructor(params) {
         const dict = params.dict;
 		this.canvas = params.canvas;
-		this.annotationTempCanvas = params.annotationTempCanvas;	// 绘制拉选框的画布层
         this.annotation = params.annotation;
 		this.currentTextLayer = params.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
 		this.context = this.canvas.getContext("2d");
@@ -467,6 +466,7 @@ class AnnotationTool {
                     this.drawRect(rectangle)
                     break;
                 default :
+					console.log("注释按钮类型：" + GlobalConfig.annotationType);
                     break;
             }
         }
@@ -496,8 +496,11 @@ class AnnotationTool {
 		//var e = event || window.event ;
 		var _this = this;		// 当在 mousemove 发生 event 事件时，this 指向了被监听的对象，所以此处需要重新赋值
 		GlobalConfig.this = this;
-		EventUtil.addHandler(GlobalConfig.this.currentTextLayer, "mousedown",  GlobalConfig.this.mouseDown);
-		//GlobalConfig.this.currentTextLayer.addEventListener("mousedown", GlobalConfig.this.mouseDown);
+
+		// 赵庆：给画布添加监听事件
+		EventUtil.addHandler(GlobalConfig.this.canvas, "mousedown",  GlobalConfig.this.mouseDown);
+		// 给文本层添加监听事件，就不用了再将文本层和画布层调换上下层位置
+		//EventUtil.addHandler(GlobalConfig.this.currentTextLayer, "mousedown",  GlobalConfig.this.mouseDown);
 
 	}
 
@@ -508,8 +511,8 @@ class AnnotationTool {
 		//alert(GlobalConfig.currentTextLayer);
 		_this.xStart = e.offsetX;
 		_this.yStart = e.offsetY;
-		EventUtil.addHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
-		EventUtil.addHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
+		EventUtil.addHandler(_this.canvas, "mousemove",  _this.mouseMove);
+		EventUtil.addHandler(_this.canvas, "mouseup",  _this.mouseUp);
 		console.log("mouseDown: "+e.offsetX);
 		
 	}
@@ -546,8 +549,8 @@ class AnnotationTool {
 
 		/* 重置 x,y 坐标 */
 		_this.reset();
-		EventUtil.removeHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
-		EventUtil.removeHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
+		EventUtil.removeHandler(_this.canvas, "mousemove",  _this.mouseMove);
+		EventUtil.removeHandler(_this.canvas, "mouseup",  _this.mouseUp);
 		console.log("mouseup: "+ rect);
 	}
 	
@@ -563,7 +566,7 @@ class EventUtil{
 
     static addHandler(element, type, handler){
         // 先判斷是否存在該事件，如果不存在加入，否則不加入
-        let name = "element.tagName=" + element.tagName + "&element.mark="+ element.getAttribute("mark") + "&type=" + type + "&handler.name=" + handler.name;
+        let name = "element.tagName=" + element.tagName + "&element.id="+ element.getAttribute("id") + "&type=" + type + "&handler.name=" + handler.name;
         // let name = element.tagName + "_" + type + "_" + handler.name;
         if (GlobalConfig.eventBus != null) {
             for (let i = 0; i < GlobalConfig.eventBus.length; i++){
@@ -593,7 +596,7 @@ class EventUtil{
             element["on" + type] = null;
         }
 
-        let name = "element.tagName=" + element.tagName + "&element.mark="+ element.getAttribute("mark") + "&type=" + type + "&handler.name=" + handler.name;
+        let name = "element.tagName=" + element.tagName + "&element.id="+ element.getAttribute("id") + "&type=" + type + "&handler.name=" + handler.name;
         if (GlobalConfig.eventBus != null) {
             for (let i = 0; i < GlobalConfig.eventBus.length; i++){
                 if (name == GlobalConfig.eventBus[i]){
@@ -611,7 +614,10 @@ function run() {
 
 	var toolbarViewerMiddle = document.getElementById("toolbarViewerMiddle");
 	
+	// 当工具栏加载完毕后执行的回调函数
 	var callback = function(){
+
+		var pdfCursorTools = PDFViewerApplication.pdfCursorTools;	// 获取全局的工具栏二级工具
 
 		// 创建直线按钮
 		var lineAnnotationButton = new AnnotationButton({
@@ -625,7 +631,7 @@ function run() {
 				title: "Line Tool",
 				"data-l10n-id": "line_annotation",
 			}
-		});
+		}).createElement();
 
 		// 创建矩形按钮
 		var rectAnnotationButton = new AnnotationButton({
@@ -639,49 +645,73 @@ function run() {
 				title: "Rect Tool",
 				"data-l10n-id": "rect_annotation",
 			}
-		});
+		}).createElement();
+
+		// 创建圆形按钮
+		var circleAnnotationButton = new AnnotationButton({
+			id: "circleAnnotationButton",
+			name: "circleAnnotationButton",
+			type: "button",
+			spanNodeValue: "Circle Annotation",
+			attributes: {
+				class: "toolbarButton",
+				annotationType: "circle",
+				title: "Circle Tool",
+				"data-l10n-id": "circle_annotation",
+			}
+		}).createElement();
 
 		/* 创建注释工具容器并插入注释工具 */
 		new AnnotationBar({
-			annotationButtons: [lineAnnotationButton.createElement(), rectAnnotationButton.createElement()]
+			annotationButtons: [
+				lineAnnotationButton, 
+				rectAnnotationButton,
+				circleAnnotationButton
+			]
 		}).create();
+
+		// 将注释层置于最上方
+		var annotationLayerToTop = function(){
+			GlobalConfig.annotationType = this.getAttribute("annotationType");	// 标记处于激活状态的注释按钮类型，便于绘制之前先判断按钮类型
+			GlobalConfig.mouseState = "annotation";		// 标记当前鼠标处于绘制状态
+			GlobalConfig.canvas.style.zIndex = 1;	
+			PDFViewerApplication.pdfCursorTools.active = 0;
+		}
+		// 给所有注释按钮绑定事件: 如果触发绘制注释按钮选择，则进行标记当前鼠标状态以便于后期根据其状态将注释层置于文本层上
+		for (var key in GlobalConfig.annotationButton) {
+			var annotationButton = GlobalConfig.annotationButton[key];
+			
+			EventUtil.addHandler(annotationButton, "click", annotationLayerToTop);
+		}
+
+		// 如果点击了选择文字状态
+		var textLayerToTop = function(){
+			GlobalConfig.mouseState = "selecttext";		// 标记当前鼠标处于选择文字状态
+			GlobalConfig.canvas.style.zIndex = 0;	
+		}
+		// 如果触发文本选择，则进行标记当前鼠标状态以及将注释层置于文本层下
+		EventUtil.addHandler(document.getElementById("cursorSelectTool"), "click", textLayerToTop);
 
 	}
 
-	createAnnotationBar(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具 */
+	createAnnotationBar(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具，同时给按钮绑定事件：交换图层位置 */
 
-	/* 当注释工具加载成功时，绑定事件 */
-	bindEvent(GlobalConfig.annotationButton, function(){
-		for (var key in GlobalConfig.annotationButton) {
-			var annotationButton = GlobalConfig.annotationButton[key];
-			if(annotationButton != null){
-				/* 执行绘制操作 */
-				var draw = function(evt){
-					evt = event || window.event;
-					var paramer = {
-						currentPageViewer: GlobalConfig.currentPageViewer,
-						canvas: GlobalConfig.canvas,
-						annotationTempCanvas: GlobalConfig.annotationTempCanvas,
-						currentTextLayer: GlobalConfig.currentTextLayer,
-						dict: []
-					}
-					var annotationTool = new AnnotationTool(paramer);
-					annotationTool.drawEvent();
-					//alert(`更新渲染下一页: ${GlobalConfig.page}！`);
-	
-				}
-	
-				GlobalConfig.drawAnnotation = function(){
-					GlobalConfig.annotationType = this.getAttribute("annotationType");	// 标记处于激活状态的注释按钮类型，便于绘制之前先判断按钮类型
-					isPDFLoaded(PDFViewerApplication, draw);
-				}
-				
-				EventUtil.addHandler(annotationButton, "click", GlobalConfig.drawAnnotation);
-				
-			}
-			
-		}	
-	})
+	var addDrawEvent = function(evt){
+		/* 执行绘制操作 */
+		evt = event || window.event;
+		var paramer = {
+			currentPageViewer: GlobalConfig.currentPageViewer,
+			canvas: GlobalConfig.canvas,
+			annotationTempCanvas: GlobalConfig.annotationTempCanvas,
+			currentTextLayer: GlobalConfig.currentTextLayer,
+			dict: []
+		}
+		var annotationTool = new AnnotationTool(paramer);
+		annotationTool.drawEvent();
+
+	}
+	isPDFLoaded(PDFViewerApplication, addDrawEvent);	// 当页面创建成功时，给新建的注释层绑定绘制事件
+
 }
 
 export {
