@@ -1,6 +1,5 @@
 import { insertAfter, domLoaded, isPDFLoaded, GlobalConfig, isDomLoaded } from "./annotation_utils.js"
 import { AnnotationBar, AnnotationButton } from "./annotation_bar.js"
-import { AppOptions } from "../app_options.js";
 
 /* 注释对象 */
 class Annotation {

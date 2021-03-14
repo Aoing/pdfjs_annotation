@@ -103,8 +103,21 @@ function insertAfter(element, target) {
 }
 
 /* 当目标元素加载成功后，执行回调 */
-var timer = null;
 function domLoaded(element, callback){
+	/* 启动定时器检查，异步判断 dom 是否加载完毕 */
+	var interval = setInterval(loadPdf, 1000);
+	function loadPdf(){
+		if(element != null){
+			callback();
+			window.clearInterval(interval);
+			alert("dom 加载成功！创建并插入注释工具，清除定时器");
+		}	
+	}
+}
+
+/* 当目标元素加载成功后，执行回调 */
+var timer = null;
+function domLoaded1(element, callback){
 	/* 启动定时器检查，异步判断 dom 是否加载完毕 */
 	var domPromise = new Promise(function(resolve, reject){
 		timer = window.setTimeout(function(){
