@@ -2,9 +2,15 @@
 :root {
     /* 新增 */
     --toolbarButton-lineAnnotation-icon: url(../images/toolbarButton-lineAnnotation.svg);
+    --toolbarButton-RectAnnotation-icon: url(../images/toolbarButton-rectAnnotation.svg);
 }
 
-.toolbarButton#lineAnnotation::before {
+.toolbarButton#rectAnnotationButton::before {
+    -webkit-mask-image: var(--toolbarButton-RectAnnotation-icon);
+    mask-image: var(--toolbarButton-RectAnnotation-icon);
+}
+
+.toolbarButton#lineAnnotationButton::before {
     -webkit-mask-image: var(--toolbarButton-lineAnnotation-icon);
     mask-image: var(--toolbarButton-lineAnnotation-icon);
 }

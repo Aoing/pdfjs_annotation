@@ -1,5 +1,5 @@
 import { insertAfter, domLoaded, isPDFLoaded, GlobalConfig, isDomLoaded } from "./annotation_utils.js"
-import { AnnotationBar } from "./annotation_bar.js"
+import { AnnotationBar, AnnotationButton } from "./annotation_bar.js"
 import { AppOptions } from "../app_options.js";
 
 /* 注释对象 */
@@ -648,15 +648,42 @@ class EventUtil{
 /* Annotation 的启动入口方法 */
 function run() {
 
-	var appOptions = AppOptions;
-	var all = appOptions.getAll();
-
-	/* 创建并插入注释工具 */
-	var annotationBar = new AnnotationBar();
+	
 	var toolbarViewerMiddle = document.getElementById("toolbarViewerMiddle");
 	let callback = function(){
-		annotationBar.insertToolBarViewerBottom();
-		annotationBar.insertAnnotationButton();
+		var lineAnnotationButton = new AnnotationButton({
+			id: "lineAnnotationButton",
+			name: "lineAnnotationButton",
+			type: "button",
+			class: "toolbarButton",
+			title: "Line Tool",
+			"data-l10n-id": "line_annotation",
+			spanNodeValue: "Line Annotation",
+			attributes: {
+				class: "toolbarButton",
+			}
+		});
+		var rectAnnotationButton = new AnnotationButton({
+			id: "rectAnnotationButton",
+			name: "rectAnnotationButton",
+			type: "button",
+			class: "toolbarButton",
+			title: "Rect Tool",
+			"data-l10n-id": "rect_annotation",
+			spanNodeValue: "Rect Annotation",
+			attributes: {
+				class: "toolbarButton",
+			}
+		});
+
+		/* 创建并插入注释工具 */
+		var annotationBar = new AnnotationBar({
+			annotationButtons: [lineAnnotationButton.createElement(), rectAnnotationButton.createElement()]
+		});
+		annotationBar.create();
+		
+		//annotationBar.insertToolBarViewerBottom();
+		//annotationBar.insertAnnotationButton();
 	}
 	domLoaded(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具 */
 
