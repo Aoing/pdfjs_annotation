@@ -1,4 +1,4 @@
-import { insertAfter, domLoaded, isPDFLoaded, GlobalConfig, isDomLoaded } from "./annotation_utils.js"
+import { insertAfter, createAnnotationBar, isPDFLoaded, GlobalConfig, bindEvent } from "./annotation_utils.js"
 import { AnnotationBar, AnnotationButton } from "./annotation_bar.js"
 
 /* 注释对象 */
@@ -664,10 +664,10 @@ function run() {
 
 	}
 
-	domLoaded(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具 */
+	createAnnotationBar(toolbarViewerMiddle, callback);	/* 当 dom 对象加载完毕后，创建并插入注释工具 */
 
 	/* 当注释工具加载成功时，绑定事件 */
-	isDomLoaded(GlobalConfig.annotationButton, function(){
+	bindEvent(GlobalConfig.annotationButton, function(){
 		for (var key in GlobalConfig.annotationButton) {
 			var annotationButton = GlobalConfig.annotationButton[key];
 			if(annotationButton != null){
@@ -683,7 +683,7 @@ function run() {
 					}
 					var annotationTool = new AnnotationTool(paramer);
 					annotationTool.drawEvent();
-					alert(`更新渲染下一页: ${GlobalConfig.page}！`);
+					//alert(`更新渲染下一页: ${GlobalConfig.page}！`);
 	
 				}
 	
@@ -699,34 +699,6 @@ function run() {
 			
 		}	
 	})
-	/*var timer = null;	
-	// 启动定时器检查，异步判断 dom 是否加载完毕，便于插入元素 
-	let domPromise = new Promise(function(resolve, reject){
-		timer = window.setTimeout(function(){
-			if(toolbarViewerMiddle != null){
-				resolve(true);
-			}		
-		}, 1);
-	});
-
-	// 异步有结果时的处理 
-	domPromise.then(function(resolveMessage){
-		annotationBar._insertToolBarViewerBottom();
-		annotationBar.insertAnnotationButton();
-		window.clearTimeout(timer);	// 清除定时器，防止消耗性能 
-	})*/
-
-     
-    // getAllCanvas();
-
-/*	document.getElementById("testButton").addEventListener("click", function(){
-		// only jpeg is supported by jsPDF
-		var imgData = GlobalConfig.canvas.toDataURL("image/jpeg", 1.0);
-		var pdf = new jsPDF();
-	  
-		pdf.addImage(imgData, 'JPEG', 0, 0);
-		pdf.save("download.pdf");
-	  }, false);*/
 }
 
 export {

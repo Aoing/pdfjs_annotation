@@ -1,6 +1,7 @@
 import { insertAfter, GlobalConfig } from "./annotation_utils.js"
 //import { PDFViewerApplication } from "../viewer.js"
 
+// 注释按钮类，可添加新的注释类型按钮
 class AnnotationButton{
 	constructor(params){
 		this.id = params.id;
@@ -40,7 +41,7 @@ class AnnotationButton{
 	
 }
 
-/* 插入注释工具按钮 */
+/* 注释工具容器 */
 class AnnotationBar {
 
     constructor(params) {

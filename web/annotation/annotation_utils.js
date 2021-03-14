@@ -2,6 +2,7 @@
 import { AnnotationBar } from "./annotation_bar.js"
 import { PDFViewerApplication } from "../app.js";
 
+// 全局配置
 const GlobalConfig = {
 	annotations: null,
 	currentPageViewer: null,
@@ -103,21 +104,21 @@ function insertAfter(element, target) {
 }
 
 /* 当目标元素加载成功后，执行回调 */
-function domLoaded(element, callback){
+function createAnnotationBar(element, callback){
 	/* 启动定时器检查，异步判断 dom 是否加载完毕 */
 	var interval = setInterval(loadPdf, 1000);
 	function loadPdf(){
 		if(element != null){
 			callback();
 			window.clearInterval(interval);
-			alert("dom 加载成功！创建并插入注释工具，清除定时器");
+			//alert("dom 加载成功！创建并插入注释工具，清除定时器");
 		}	
 	}
 }
 
-/* 当目标元素加载成功后，执行回调 */
+/* 当目标元素加载成功后，执行回调 使用 promise */
 var timer = null;
-function domLoaded1(element, callback){
+function createAnnotationBar1(element, callback){
 	/* 启动定时器检查，异步判断 dom 是否加载完毕 */
 	var domPromise = new Promise(function(resolve, reject){
 		timer = window.setTimeout(function(){
@@ -138,7 +139,7 @@ function domLoaded1(element, callback){
 }
 
 /* 判断某个 dom 对象是否加载完毕 */
-function isDomLoaded(element, callback){
+function bindEvent(element, callback){
 	var interval = setInterval(work, 1000);
 	//GlobalConfig.timer = timer;
     function work() {
@@ -154,8 +155,8 @@ function isDomLoaded(element, callback){
 
 export {
     insertAfter,
-	domLoaded,
+	createAnnotationBar,
 	isPDFLoaded,
 	GlobalConfig,
-	isDomLoaded,
+	bindEvent,
 }
