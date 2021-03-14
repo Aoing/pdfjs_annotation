@@ -390,17 +390,11 @@ class Annotation {
 class AnnotationTool {
     constructor(params) {
         const dict = params.dict;
-
 		this.canvas = params.canvas;
 		this.annotationTempCanvas = params.annotationTempCanvas;	// 绘制拉选框的画布层
         this.annotation = params.annotation;
 		this.currentTextLayer = params.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
 		this.context = this.canvas.getContext("2d");
-		//this.annotationTempContext = this.annotationTempCanvas.getContext("2d");
-		//this.annotationTempContext.clearRect(0, 0, this.annotationTempContext.width, this.annotationTempContext.height);
-
-		
-		//this.context.transform(a,b,c,d,e,f);	// 变换，原来 canvas 被缩小了一倍
 		
     }
 
@@ -525,11 +519,8 @@ class AnnotationTool {
 		e = event || window.event;
 		var _this = GlobalConfig.this;
 		_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
-		//_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
 		_this.x = e.offsetX;
 		_this.y = e.offsetY;
-		/*_this.x = e.offsetX - _this.canvas.style.left;
-		_this.y = e.offsetY - _this.canvas.style.top;*/
 		var rect = [
 			_this.xStart, 
 			_this.yStart, 
@@ -539,7 +530,6 @@ class AnnotationTool {
 		
 		/* 此处应该是绘制拉选框的注释 */
 		_this.drawAnnotation(rect);
-
 		console.log("mouseMove: "+e.offsetX);
 	}
 
@@ -556,7 +546,6 @@ class AnnotationTool {
 
 		/* 重置 x,y 坐标 */
 		_this.reset();
-
 		EventUtil.removeHandler(_this.currentTextLayer, "mousemove",  _this.mouseMove);
 		EventUtil.removeHandler(_this.currentTextLayer, "mouseup",  _this.mouseUp);
 		console.log("mouseup: "+ rect);
@@ -565,17 +554,12 @@ class AnnotationTool {
 	
 }
 
-// 添加事件的方法
+// 事件类
 class EventUtil{
 
 	constructor(params) {
 
     }
-
-	/* 设置唯一事件 */
-	static distributeEvent(){
-		//GlobalConfig.eventBus.
-	}
 
     static addHandler(element, type, handler){
         // 先判斷是否存在該事件，如果不存在加入，否則不加入
@@ -693,7 +677,6 @@ function run() {
 				}
 				
 				EventUtil.addHandler(annotationButton, "click", GlobalConfig.drawAnnotation);
-				//GlobalConfig.annotationButton.lineAnnotationButton.addEventListener("click", GlobalConfig.drawAnnotation);
 				
 			}
 			
