@@ -4,7 +4,8 @@ import { PDFViewerApplication } from "../app.js";
 
 // 全局配置
 const GlobalConfig = {
-	annotations: null,
+	annotations: [],
+	annotationsInPages: null,
 	currentPageViewer: null,
 	currentTextLayer: null,
 	annotationButton: {},
