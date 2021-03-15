@@ -32,7 +32,7 @@ function isPDFLoaded(PDFViewerApplication, callback){
     function loadPdf() {
         if (PDFViewerApplication.pdfDocument != null) {
 			GlobalConfig.pdfViewerApplication = PDFViewerApplication;
-			var pageViewer = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page);	// 获取当前页面当前页
+			var pageViewer = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page - 1);	// 获取当前页面当前页
 			var pageList = PDFViewerApplication.pdfViewer.viewer.childNodes;
 			if(pageViewer != null && GlobalConfig.currentPageViewer != pageViewer){
 				GlobalConfig.currentPageViewer = pageViewer;	// 将当前页赋值给全局变量，以便于在外部 callback 中使用
