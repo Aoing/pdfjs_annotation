@@ -4,9 +4,14 @@ import { PDFViewerApplication } from "../app.js";
 
 // 全局配置
 const GlobalConfig = {
-	annotations: [],
+	annotations: {},	// 根据页面保存注释，json 对象：page: annotation[]
 	annotationsInPages: null,
-	currentPageViewer: null,
+	currentAnnotationAttribute: {	// 当前注释的属性：颜色，线宽等
+		lineWidth: 1,
+		strokeStyle: "red",
+		fillStyle: "blue",
+	},	
+	currentAnnotation: null,	// 当前正在绘制的注释
 	currentTextLayer: null,
 	annotationButton: {},
 	pdfViewerApplication: null,

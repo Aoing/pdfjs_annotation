@@ -12,6 +12,8 @@ class Annotation {
 		this.flag = params.flag;                           // 标记: 是否正在被编辑
 		this.lineWidth = params.lineWidth;                      // 注释边线宽度
 		this.borderColor = params.borderColor;                    // 注释边线颜色
+		this.strokeStyle = params.strokeStyle;      
+		this.fillStyle = params.fillStyle;      
 		this.author = params.author;                         // 添加注释的作者
 		this.authors = params.authors;                        // 注释作者组
 		this.updateUserName = params.updateUserName;                 // 修改注释的用户名称
@@ -35,6 +37,8 @@ class AnnotationTool {
         this.annotation = params.annotation;
 		this.currentTextLayer = params.currentTextLayer;		// 当前页面的文本层，用于做监听事件，直接在文本层监听，在 canvas 绘制，避免 canvas 和 textLayer 的 z-index 切换
 		this.context = this.canvas.getContext("2d");
+		this.currentAnnotation = null;	// 当前正在绘制的注释对象
+		this.tempDrawing = false;						// 当前绘制是否是拉选框
 		
     }
 
@@ -48,61 +52,84 @@ class AnnotationTool {
 	}
 
 	// 添加注释对象
-    addAnnotation() {
+    addAnnotation(annotation, page) {
         // 将注释对象保存到注释数组
         if (annotation.width != 0 && annotation.height != 0) {
-            GlobalConfig.annotations.push(annotation);
+			var annotationArr = GlobalConfig.annotations[page];	// 获取指定页面所有注释
+			if(annotationArr == null){
+				annotationArr = [];
+				GlobalConfig.annotations[page] = annotationArr;
+			}
+			annotationArr.push(annotation);
         }
     }
 
 	// 绘制所有注释
-    drawAnnotations() {
+    drawAnnotations(canvas, annotations) {
         // 清除画布，准备绘制，如果不清除会导致绘制很多矩形框
-        this.context.clearRect(0, 0, this.canvas.width, this.canvas.height);
+		var context = canvas.getContext("2d");
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        if (annotations != null && annotations.length > 0){
 
-        if (GlobalConfig.annotations != null && GlobalConfig.annotations.length > 0){
-
-            for (let i = 0; i < GlobalConfig.annotations.length; i++){
-                this.drawAnnotation(GlobalConfig.annotations[i]);
+            for (let i = 0; i < annotations.length; i++){
+                this.drawAnnotation(context, annotations[i]);
             }
         };
     }
 
 	// 根据点击的注释按钮类型绘制注释
-    drawAnnotation(rectangle){
-        if (rectangle != null){
-			//this.rectangle = annotation.rectangle;
-            switch (GlobalConfig.annotationType) {
+    drawAnnotation(context, annotation, flag = false){	// flag: 当前绘制是否是绘制拉选框
+        if (annotation.position != null){
+            switch (annotation.type) {
                 case "line" :
-                    this.drawLine(rectangle);
+                    this.drawLine(context, annotation, flag);
                     break;
                 case "rect" :
-                    this.drawRect(rectangle)
+                    this.drawRect(context, annotation, flag)
                     break;
                 default :
-					console.log("注释按钮类型：" + GlobalConfig.annotationType);
+					console.log("注释类型：" + annotation.type);
                     break;
             }
         }
     }
 
 	// 绘制矩形
-    drawRect (rectangle) {
-		this.context.beginPath();
-		this.context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
-		this.context.strokeStyle ="black";
-		this.context.lineWidth = 5;
-		this.context.stroke();
+    drawRect(context, annotation, flag) {
+		var rectangle = annotation.position,
+			strokeStyle = annotation.strokeStyle,
+			lineWidth  = annotation.lineWidth;
+
+		if(flag){
+			strokeStyle = GlobalConfig.currentAnnotationAttribute.strokeStyle,
+			lineWidth  = GlobalConfig.currentAnnotationAttribute.lineWidth;
+		}
+
+		context.beginPath();
+		context.rect(rectangle[0], rectangle[1], rectangle[2] - rectangle[0], rectangle[3] - rectangle[1]);
+		context.strokeStyle = strokeStyle;
+		context.lineWidth = lineWidth;
+		context.stroke();
     }
 
 	// 绘制直线
-	drawLine(rectangle){
-		this.context.beginPath();
-		this.context.fillStyle="black";
-		this.context.save();
-		this.context.moveTo(rectangle[0], rectangle[1]);
-		this.context.lineTo(rectangle[2], rectangle[3]);
-		this.context.stroke();
+	drawLine(context, annotation, flag){
+		var rectangle = annotation.position,
+			strokeStyle = annotation.strokeStyle,
+			lineWidth  = annotation.lineWidth;
+
+		if(flag){
+			strokeStyle = GlobalConfig.currentAnnotationAttribute.strokeStyle,
+			lineWidth  = GlobalConfig.currentAnnotationAttribute.lineWidth;
+		}
+
+		context.beginPath();
+		context.strokeStyle = strokeStyle;
+		context.lineWidth = lineWidth;
+		context.save();
+		context.moveTo(rectangle[0], rectangle[1]);
+		context.lineTo(rectangle[2], rectangle[3]);
+		context.stroke();
 	}
 
 	/* 绑定绘制事件 */
@@ -145,8 +172,31 @@ class AnnotationTool {
 			_this.y
 		]
 		
+		// 根据当前绘制创建注释对象
+		var data = {
+			position: rect,						// 坐标位置
+			width: Math.abs(rect[2]),                          // 注释宽
+			height: Math.abs(rect[3]),                         // 注释高
+			flag: false,                           // 标记: 是否正在被编辑
+			lineWidth: GlobalConfig.currentAnnotationAttribute.lineWidth,                      // 注释边线宽度
+			strokeStyle: GlobalConfig.currentAnnotationAttribute.strokeStyle,                    // 注释边线颜色
+			fillStyle: GlobalConfig.currentAnnotationAttribute.fillStyle,                    // 注释边线颜色
+			author: "Aoing",                         // 添加注释的作者
+			authors: "",                        // 注释作者组
+			updateUserName: "",                 // 修改注释的用户名称
+			updateTime: new Date(),                     // 修改注释的时间
+			addDatetime: new Date(),                        // 新增注释时间
+			pageNumber: GlobalConfig.page,                           // 注释所在的页面
+			type: GlobalConfig.annotationType,                           // 注释类型：1 矩形，2 圆形
+			content: {									// 批阅内容
+
+			},                 		
+		}
+		// 创建注释并保存
+		_this.currentAnnotation = new Annotation(data);
+		_this.drawAnnotations(_this.canvas, GlobalConfig.annotations[GlobalConfig.page]);	// 绘制当前页面所有注释，否则移动鼠标绘制时，会清除所有注释，只有当松开鼠标时才重新绘制
 		/* 此处应该是绘制拉选框的注释 */
-		_this.drawAnnotation(rect);
+		_this.drawAnnotation(_this.context, _this.currentAnnotation, true);
 		console.log("mouseMove: "+e.offsetX);
 	}
 
@@ -161,27 +211,8 @@ class AnnotationTool {
 			_this.y
 		]
 
-		var data = {
-			position: rect,						// 坐标位置
-			width: Math.abs(rect[2]),                          // 注释宽
-			height: Math.abs(rect[3]),                         // 注释高
-			flag: false,                           // 标记: 是否正在被编辑
-			lineWidth: 5,                      // 注释边线宽度
-			borderColor: "black",                    // 注释边线颜色
-			author: "Aoing",                         // 添加注释的作者
-			authors: "",                        // 注释作者组
-			updateUserName: "",                 // 修改注释的用户名称
-			updateTime: new Date(),                     // 修改注释的时间
-			addDatetime: new Date(),                        // 新增注释时间
-			pageNumber: GlobalConfig.page,                           // 注释所在的页面
-			type: GlobalConfig.annotationType,                           // 注释类型：1 矩形，2 圆形
-			content: {									// 批阅内容
-
-			},                 		
-		}
-		// 创建注释并保存
-		var annotation = new Annotation(data);
-		GlobalConfig.annotations.push(annotation);
+		_this.addAnnotation(_this.currentAnnotation, GlobalConfig.page);	// 加入到全局注释中
+		_this.drawAnnotations(_this.canvas, GlobalConfig.annotations[GlobalConfig.page]);	// 重新绘制当前页面所有注释
 		/* 重置 x,y 坐标 */
 		_this.reset();
 		EventUtil.removeHandler(_this.canvas, "mousemove",  _this.mouseMove);
