@@ -474,6 +474,9 @@ function run() {
 		var annotationTool = new AnnotationTool(paramer);
 		annotationTool.drawEvent();
 
+		// 渲染页面时，绘制当前页面所有注释
+		annotationTool.drawAnnotations(GlobalConfig.canvas, GlobalConfig.annotations[GlobalConfig.page]);
+
 	}
 	isPDFLoaded(PDFViewerApplication, addDrawEvent);	// 当页面创建成功时，给新建的注释层绑定绘制事件
 
