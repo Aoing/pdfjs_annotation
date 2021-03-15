@@ -297,7 +297,7 @@ function run() {
 				title: "Line Tool",
 				"data-l10n-id": "line_annotation",
 			}
-		}).createElement();
+		}).createAnnotationButton();
 
 		// 创建矩形按钮
 		var rectAnnotationButton = new AnnotationButton({
@@ -311,7 +311,7 @@ function run() {
 				title: "Rect Tool",
 				"data-l10n-id": "rect_annotation",
 			}
-		}).createElement();
+		}).createAnnotationButton();
 
 		// 创建圆形按钮
 		var circleAnnotationButton = new AnnotationButton({
@@ -325,14 +325,114 @@ function run() {
 				title: "Circle Tool",
 				"data-l10n-id": "circle_annotation",
 			}
-		}).createElement();
+		}).createAnnotationButton();
 
+		// 赵庆 2021-3-15 10:19:09 创建下拉框：选择注释线宽
+		var lineWidthAnnotationButtonTool = new AnnotationButton({
+			id: "lineWidthAnnotationButtonTool",
+			name: "lineWidthAnnotationButtonTool",
+			type: "select",
+			spanNodeValue: "Select Style",
+			value: "线宽",
+			attributes: {
+				class: "toolbarButton",
+				annotationType: "styleselected",
+				title: "Select Style Tool",
+				"data-l10n-id": "select_style",
+			}
+		});
+		var lineWidthAnnotationButton = lineWidthAnnotationButtonTool.createElement();
+		var optionList = [];
+		var elementData = [
+			{
+				id: "lineWidth_1px",
+				name: "lineWidth",
+				type: "option",
+				value: "1px",
+				attributes: {
+					value: 1
+				}
+			},
+			{
+				id: "lineWidth_5px",
+				name: "lineWidth",
+				type: "option",
+				value: "5px",
+				attributes: {
+					value: 5
+				}
+			}
+		];
+		for (let i = 0; i < elementData.length; i++) {
+			var date = elementData[i];
+			var option = new AnnotationButton(date).createElement();
+			optionList.push(option);
+		}
+
+		lineWidthAnnotationButtonTool.createChildElement(optionList, lineWidthAnnotationButton);
+		
+		lineWidthAnnotationButton.addEventListener("change", function(){
+			GlobalConfig.currentAnnotationAttribute.lineWidth = lineWidthAnnotationButton.options[lineWidthAnnotationButton.selectedIndex].value;
+		})
+
+		// 赵庆 2021-3-15 10:19:09 创建下拉框：选择注释颜色
+		var colorAnnotationButtonTool = new AnnotationButton({
+			id: "colorButton",
+			name: "colorButton",
+			type: "select",
+			spanNodeValue: "Select Style",
+			value: "线宽",
+			attributes: {
+				class: "toolbarButton",
+				annotationType: "styleselected",
+				title: "Select Style Tool",
+				"data-l10n-id": "select_color",
+			}
+		});
+		var colorAnnotationButton = colorAnnotationButtonTool.createElement();
+		var colorOptionList = [];
+		var colorElementData = [
+			{
+				id: "color_black",
+				name: "color_black",
+				type: "option",
+				value: "黑色",
+				attributes: {
+					value: "black",
+					style: "background-color: 'black'"
+				}
+			},
+			{
+				id: "color_red",
+				name: "lineWidth",
+				type: "option",
+				value: "红色",
+				attributes: {
+					value: "red",
+					style: "background-color: 'red'"
+				}
+			}
+		];
+		for (let i = 0; i < colorElementData.length; i++) {
+			var date = colorElementData[i];
+			var option = new AnnotationButton(date).createElement();
+			colorOptionList.push(option);
+		}
+
+		colorAnnotationButtonTool.createChildElement(colorOptionList, colorAnnotationButton);
+		
+		colorAnnotationButton.addEventListener("change", function(){
+			GlobalConfig.currentAnnotationAttribute.strokeStyle = colorAnnotationButton.options[colorAnnotationButton.selectedIndex].value;
+		})
+		
 		/* 创建注释工具容器并插入注释工具 */
 		new AnnotationBar({
 			annotationButtons: [
 				lineAnnotationButton, 
 				rectAnnotationButton,
-				circleAnnotationButton
+				circleAnnotationButton,
+				lineWidthAnnotationButton,
+				colorAnnotationButton,
 			]
 		}).create();
 
@@ -346,7 +446,6 @@ function run() {
 		// 给所有注释按钮绑定事件: 如果触发绘制注释按钮选择，则进行标记当前鼠标状态以便于后期根据其状态将注释层置于文本层上
 		for (var key in GlobalConfig.annotationButton) {
 			var annotationButton = GlobalConfig.annotationButton[key];
-			
 			EventUtil.addHandler(annotationButton, "click", annotationLayerToTop);
 		}
 

@@ -9,6 +9,7 @@ class AnnotationButton{
 		this.spanNodeValue = params.spanNodeValue;
 		this.name = params.name;
 		this.annotationType = params.annotationType;
+		this.value = params.value;
 		//this.element = null; // 当前元素
 	}
 	
@@ -18,7 +19,9 @@ class AnnotationButton{
 		this.button = document.createElement(this.type);
 		this.button.setAttribute("id", this.id);
 		this.button.style.position = "relative";
-
+		if( this.value != null){
+			this.button.innerHTML = this.value;
+		}
 		// 添加属性
 		if(this.attributes != null){
 			for (var key in this.attributes) {
@@ -26,18 +29,37 @@ class AnnotationButton{
 			}
 		}
 
-		this.buttonSpan = document.createElement("span");
-        this.buttonSpan.setAttribute("data-l10n-id", this.spanNodeValue);
-        this.buttonSpan.nodeValue = this.spanNodeValue;
-        // 插入 span 到 button 子元素
-        this.button.appendChild(this.buttonSpan);
-
-		/* 添加到全局配置中 */
-		GlobalConfig.annotationButton[this.name] = this.button; 
-
 		return this.button;
 	}
+
+	// 创建按钮下的 span 
+	createAnnotationButton(){
+		this.createElement();
+		var buttonSpan = document.createElement("span");
+        buttonSpan.setAttribute("data-l10n-id", this.spanNodeValue);
+        buttonSpan.nodeValue = this.spanNodeValue;
+        // 插入 span 到 button 子元素
+        this.button.appendChild(buttonSpan);
+		/* 添加到全局配置中 */
+		GlobalConfig.annotationButton[this.name] = this.button; 
+		return this.button;
+	}
+
+	// 批量添加子元素
+	createChildElement(childElementList, elementNode){
+		if(childElementList != null){
+			for (let i = 0; i < childElementList.length; i++) {
+				const child = childElementList[i];
+				elementNode.appendChild(child);
+				
+			}
+		}
+	}
 	
+	// 给创建的按钮添加事件
+	bindEventListener(eventName, callback){
+		this.button.addEventListener(eventName, callback);
+	}
 }
 
 /* 注释工具容器 */
