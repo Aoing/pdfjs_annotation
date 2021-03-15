@@ -200,7 +200,7 @@ class AnnotationTool {
 		console.log("mouseMove: "+e.offsetX);
 	}
 
-	// 鼠标弹起事件
+	// 鼠标弹起事件，即绘制结束
 	mouseUp(e){
 		e = event || window.event;
 		var _this = GlobalConfig.this;
@@ -217,7 +217,18 @@ class AnnotationTool {
 		_this.reset();
 		EventUtil.removeHandler(_this.canvas, "mousemove",  _this.mouseMove);
 		EventUtil.removeHandler(_this.canvas, "mouseup",  _this.mouseUp);
-		console.log("mouseup: "+ rect);
+		console.log("鼠标弹起事件，即绘制结束，此处可以执行自定义操作：保存注释等，此处获取注释的方法为：GlobalConfig.annotations，所有注释内容：");
+		if(GlobalConfig.annotations != null){
+			for(var page in GlobalConfig.annotations){
+				var annotations = GlobalConfig.annotations[page];
+				console.log(`annotation.page: ${page}`);
+				for (let i = 0; i < annotations.length; i++) {
+					const annotation = annotations[i];
+					console.log(`	annotation.position: ${annotation.position}, annotation.type: ${annotation.type}`);
+					
+				}
+			}
+		}
 	}
 	
 	
