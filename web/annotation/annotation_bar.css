@@ -2,17 +2,29 @@
 :root {
     /* 新增 */
     --toolbarButton-lineAnnotation-icon: url(../images/toolbarButton-lineAnnotation.svg);
-    --toolbarButton-RectAnnotation-icon: url(../images/toolbarButton-rectAnnotation.svg);
+    --toolbarButton-rectAnnotation-icon: url(../images/toolbarButton-rectAnnotation.svg);
+    --toolbarButton-circleAnnotation-icon: url(../images/toolbarButton-circleAnnotation.svg);
+    --toolbarButton-ellipseAnnotation-icon: url(../images/toolbarButton-ellipseAnnotation.svg);
 }
 
 .toolbarButton#rectAnnotationButton::before {
-    -webkit-mask-image: var(--toolbarButton-RectAnnotation-icon);
-    mask-image: var(--toolbarButton-RectAnnotation-icon);
+    -webkit-mask-image: var(--toolbarButton-rectAnnotation-icon);
+    mask-image: var(--toolbarButton-rectAnnotation-icon);
 }
 
 .toolbarButton#lineAnnotationButton::before {
     -webkit-mask-image: var(--toolbarButton-lineAnnotation-icon);
     mask-image: var(--toolbarButton-lineAnnotation-icon);
+}
+
+.toolbarButton#circleAnnotationButton::before {
+    -webkit-mask-image: var(--toolbarButton-circleAnnotation-icon);
+    mask-image: var(--toolbarButton-circleAnnotation-icon);
+}
+
+.toolbarButton#ellipseAnnotationButton::before {
+    -webkit-mask-image: var(--toolbarButton-ellipseAnnotation-icon);
+    mask-image: var(--toolbarButton-ellipseAnnotation-icon);
 }
 
 .annotationCanvas{

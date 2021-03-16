@@ -90,12 +90,36 @@ class AnnotationTool {
 				case "circle" :
                     this.drawCircle(context, annotation, flag)
                     break;
+				case "ellipse" :
+                    this.drawEllipse(context, annotation, flag)
+                    break;
                 default :
 					console.log("注释类型：" + annotation.type);
                     break;
             }
         }
     }
+
+	// 绘制椭圆
+	drawEllipse(context, annotation, flag){
+		var x = (annotation.position[2] + annotation.position[0])/2,
+			y = (annotation.position[3] + annotation.position[1])/2,
+			a = Math.abs((annotation.position[2] - annotation.position[0])/2),
+			b = Math.abs((annotation.position[3] - annotation.position[1])/2),
+			strokeStyle = annotation.strokeStyle,
+			lineWidth  = annotation.lineWidth;
+
+		if(flag){
+			strokeStyle = GlobalConfig.currentAnnotationAttribute.strokeStyle,
+			lineWidth  = GlobalConfig.currentAnnotationAttribute.lineWidth;
+		}
+		context.beginPath();
+		context.strokeStyle = strokeStyle;
+		context.lineWidth = lineWidth;
+		context.ellipse(x, y, a, b, 0, 0, 2 * Math.PI);
+		context.stroke();
+		
+	}
 
 	// 绘制圆形
 	drawCircle(context, annotation, flag){
@@ -361,6 +385,20 @@ function run() {
 				"data-l10n-id": "circle_annotation",
 			}
 		}).createAnnotationButton();
+		
+		// 创建椭圆形按钮
+		var ellipseAnnotationButton = new AnnotationButton({
+			id: "ellipseAnnotationButton",
+			name: "ellipseAnnotationButton",
+			type: "button",
+			spanNodeValue: "Ellipse Annotation",
+			attributes: {
+				class: "toolbarButton",
+				annotationType: "ellipse",
+				title: "Ellipse Tool",
+				"data-l10n-id": "ellipse_annotation",
+			}
+		}).createAnnotationButton();
 
 		// 赵庆 2021-3-15 10:19:09 创建下拉框：选择注释线宽
 		var lineWidthAnnotationButtonTool = new AnnotationButton({
@@ -466,8 +504,10 @@ function run() {
 				lineAnnotationButton, 
 				rectAnnotationButton,
 				circleAnnotationButton,
+				ellipseAnnotationButton,
 				lineWidthAnnotationButton,
 				colorAnnotationButton,
+				
 			]
 		}).create();
 
