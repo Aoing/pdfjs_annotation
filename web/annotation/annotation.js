@@ -91,12 +91,27 @@ class AnnotationTool {
 				case "ellipse" :
                     this.drawEllipse(context, annotation, flag)
                     break;
+                case "comment" :
+                    this.addComment(context, annotation, flag)
+                    break;
                 default :
 					console.log("注释类型：" + annotation.type);
                     break;
             }
         }
     }
+
+	// 添加文字批注
+	addComment(context, annotation, flag){
+		this.drawEllipse(context, annotation, flag);
+		annotation.author = "Aoing";
+		annotation.id = "123";
+		annotation.content.text = "添加批注。。。";
+		if(GlobalConfig.doCommentAnnotation){
+			GlobalConfig.commentContainerTool.createComment(annotation);
+			GlobalConfig.doCommentAnnotation = false;
+		}
+	}
 
 	// 绘制椭圆
 	drawEllipse(context, annotation, flag){
@@ -205,6 +220,7 @@ class AnnotationTool {
 
 	// 鼠标移动事件
 	mouseMove(e){
+		GlobalConfig.doCommentAnnotation = false;	
 		e = event || window.event;
 		var _this = GlobalConfig.this;
 		_this.context.clearRect(0, 0, _this.canvas.width, _this.canvas.height);	//	先清除画布
@@ -257,12 +273,14 @@ class AnnotationTool {
 			_this.y
 		]
 
-		_this.addAnnotation(_this.currentAnnotation, GlobalConfig.page);	// 加入到全局注释中
+		GlobalConfig.doCommentAnnotation = true;	// 标志在鼠标弹起的时候才可以创建批注，否则鼠标移动时就开始创建了
+		_this.addAnnotation(_this.currentAnnotation, GlobalConfig.page, false);	// 加入到全局注释中
 		_this.drawAnnotations(_this.canvas, GlobalConfig.annotations[GlobalConfig.page]);	// 重新绘制当前页面所有注释
 		/* 重置 x,y 坐标 */
 		_this.reset();
 		EventUtil.removeHandler(_this.canvas, "mousemove",  _this.mouseMove);
 		EventUtil.removeHandler(_this.canvas, "mouseup",  _this.mouseUp);
+		
 		console.log("鼠标弹起事件，即绘制结束，此处可以执行自定义操作：保存注释等，此处获取注释的方法为：GlobalConfig.annotations，所有注释内容：");
 		if(GlobalConfig.annotations != null){
 			for(var page in GlobalConfig.annotations){
@@ -396,6 +414,20 @@ function run() {
 			}
 		}).createAnnotationButton();
 
+		// 创建文字批注按钮
+		var commentAnnotationButton = new AnnotationButton({
+			id: "commentAnnotationButton",
+			name: "commentAnnotationButton",
+			type: "button",
+			spanNodeValue: "Comment Annotation",
+			attributes: {
+				class: "toolbarButton",
+				annotationType: "comment",
+				title: "Comment Tool",
+				"data-l10n-id": "ecomment_annotation",
+			}
+		}).createAnnotationButton();
+
 		// 赵庆 2021-3-15 10:19:09 创建下拉框：选择注释线宽
 		var lineWidthAnnotationButtonTool = new AnnotationButton({
 			id: "lineWidthAnnotationButtonTool",
@@ -503,6 +535,7 @@ function run() {
 				ellipseAnnotationButton,
 				lineWidthAnnotationButton,
 				colorAnnotationButton,
+				commentAnnotationButton,
 				
 			]
 		}).create();
@@ -550,19 +583,6 @@ function run() {
 
 		var pdfCursorTools = PDFViewerApplication.pdfCursorTools;	// 获取全局的工具栏二级工具
 		var appConfig = PDFViewerApplication.appConfig;
-		GlobalConfig.commentContainerTool.createComment(new Annotation({
-			id: "123456",
-			author: "Aoing",                         // 添加注释的作者
-			authors: "",                        // 注释作者组
-			updateUserName: "",                 // 修改注释的用户名称
-			updateTime: new Date(),                     // 修改注释的时间
-			addDatetime: new Date(),                        // 新增注释时间
-			pageNumber: 1,
-			content: {									// 批阅内容
-				text: "批阅内容",
-				image: "url",
-			}            		
-	}));
 		
 	}
 	isPDFLoaded(PDFViewerApplication, addDrawEvent);	// 当页面创建成功时，给新建的注释层绑定绘制事件

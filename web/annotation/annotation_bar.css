@@ -5,6 +5,7 @@
     --toolbarButton-rectAnnotation-icon: url(../images/toolbarButton-rectAnnotation.svg);
     --toolbarButton-circleAnnotation-icon: url(../images/toolbarButton-circleAnnotation.svg);
     --toolbarButton-ellipseAnnotation-icon: url(../images/toolbarButton-ellipseAnnotation.svg);
+    --toolbarButton-commentAnnotation-icon: url(../images/toolbarButton-commentAnnotation.svg);
 
 	--comment-width: 200px;
 	--comment-transition-duration: 200ms;
@@ -29,6 +30,11 @@
 .toolbarButton#ellipseAnnotationButton::before {
     -webkit-mask-image: var(--toolbarButton-ellipseAnnotation-icon);
     mask-image: var(--toolbarButton-ellipseAnnotation-icon);
+}
+
+.toolbarButton#commentAnnotationButton::before {
+    -webkit-mask-image: var(--toolbarButton-commentAnnotation-icon);
+    mask-image: var(--toolbarButton-commentAnnotation-icon);
 }
 
 .annotationCanvas{

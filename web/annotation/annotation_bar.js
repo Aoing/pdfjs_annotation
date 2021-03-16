@@ -140,7 +140,7 @@ class CommentContainerTool{
 
 	// 创建单个评论 div
 	createComment(annotation){
-		if(annotation != null){
+		if(annotation != null && annotation.type == "comment"){
 			var id = "pageAnnotationDiv_" + annotation.pageNumber;
 			var pageAnnotationDiv = document.getElementById(id);
 			if(pageAnnotationDiv == null){

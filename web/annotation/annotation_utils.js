@@ -30,6 +30,7 @@ const GlobalConfig = {
 		commentResizer: null,
 	},
 	commentContainerTool: null,
+	doCommentAnnotation: false, //标识是否可以添加批注
 }
 
 // 事件类
