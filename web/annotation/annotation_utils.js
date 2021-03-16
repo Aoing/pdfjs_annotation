@@ -155,26 +155,21 @@ function commentResize(){
 	GlobalConfig.container.commentContainer = document.getElementById("commentContainer");
 	GlobalConfig.container.commentResizer = document.getElementById("commentResizer");
 
-	GlobalConfig.xStart = null;
 	GlobalConfig.mousMove = function(e){
 		e = event || windows.event;
-		var dx = e.clientX - GlobalConfig.xStart;
-		GlobalConfig.container.viewerContainer.style.width = (GlobalConfig.container.viewerContainer.width + dx) + "px" ;
-		GlobalConfig.container.commentContainer.style.width = (GlobalConfig.container.commentContainer.width - dx) + "px" ;
+		GlobalConfig.container.viewerContainer.style.right = document.body.clientWidth - e.clientX + "px" ;
+		GlobalConfig.container.commentContainer.style.left = e.clientX - 3 + "px" ;
+		console.log("=================x 坐标：" + e.clientX + ", document.body.clientWidth: " + document.body.clientWidth);
 	}
 
 	GlobalConfig.mousUp = function(e){
-
-		EventUtil.removeHandler(commentResizer, "mousemove", GlobalConfig.mousMove, true);
+		// 给 body 添加鼠标移动事件，否则移动不顺畅
+		EventUtil.removeHandler(document.getElementById("dummybodyid"), "mousemove", GlobalConfig.mousMove, true);
 	}
 
 
-	var mouseDown = function(e){
-		e = event || windows.event;
-		GlobalConfig.xStart = e.clientX;
-		GlobalConfig.container.viewerContainer.width = GlobalConfig.container.viewerContainer.clientWidth;
-		GlobalConfig.container.commentContainer.width = GlobalConfig.container.commentContainer.clientWidth;
-		EventUtil.addHandler(commentResizer, "mousemove", GlobalConfig.mousMove, true);
+	var mouseDown = function(){
+		EventUtil.addHandler(document.getElementById("dummybodyid"), "mousemove", GlobalConfig.mousMove, true);
 		EventUtil.addHandler(commentResizer, "mouseup", GlobalConfig.mousUp);
 	}
 
