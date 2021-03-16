@@ -5,6 +5,10 @@
     --toolbarButton-rectAnnotation-icon: url(../images/toolbarButton-rectAnnotation.svg);
     --toolbarButton-circleAnnotation-icon: url(../images/toolbarButton-circleAnnotation.svg);
     --toolbarButton-ellipseAnnotation-icon: url(../images/toolbarButton-ellipseAnnotation.svg);
+
+	--comment-width: 200px;
+	--comment-transition-duration: 200ms;
+	--comment-transition-timing-function: ease;
 }
 
 .toolbarButton#rectAnnotationButton::before {
@@ -34,4 +38,97 @@
 	opacity: 1;
 	z-index: 0px;
 	position: absolute;
+}
+
+#commentResizer{
+	position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 6px;
+    z-index: 200;
+    cursor: ew-resize;
+}
+
+html[dir="ltr"] #commentResizer {
+    right: 0px;
+}
+
+/* 设置批注评论区容器样式 */
+#commentContainer{
+	/*display: none;*/
+
+	position: absolute;
+	top: 64px;
+	bottom: 0;
+	width: var(--comment-width);
+	/*visibility: hidden;*/
+	z-index: 100;
+	border-top: 1px solid rgba(51, 51, 51, 1);
+	transition-duration: var(--comment-transition-duration);
+	transition-timing-function: var(--comment-transition-timing-function);
+	background-color: aqua;
+}
+
+html[dir="ltr"] #commentContainer {
+	transition-property: right;
+	right: calc(0px - var(--comment-width));
+}
+html[dir="rtl"] #commentContainer {
+	transition-property: left;
+	left: calc(0px - var(--comment-width));
+}
+
+#outerContainer.sidebarResizing #commentContainer {
+	/* Improve responsiveness and avoid visual glitches when the sidebar is resized. */
+	transition-duration: 0s;
+	/* Prevent e.g. the thumbnails being selected when the sidebar is resized. */
+	user-select: none;
+}
+
+#outerContainer.sidebarMoving #commentContainer,
+#outerContainer.sidebarOpen #commentContainer {
+  visibility: visible;
+}
+
+/* 设置批注评论区容器靠右 */
+html[dir="ltr"] #outerContainer.sidebarOpen #commentContainer {
+  right: 0;
+}
+html[dir="rtl"] #outerContainer.sidebarOpen #sidebarContainer {
+  left: 0;
+}
+
+/* 批注评论区样式 */
+#commentContentDiv {
+	top: 32px;
+	bottom: 0;
+	overflow: auto;
+	-webkit-overflow-scrolling: touch;
+	position: absolute;
+	width: 100%;
+	background-color: rgba(0, 0, 0, 0.1);
+}
+html[dir="ltr"] #commentContentDiv {
+	left: 0;
+	box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.25);
+  }
+html[dir="rtl"] #commentContentDiv {
+	right: 0;
+	box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.25);
+}
+
+  /* 改变尺寸的 div */
+#commentResizer {
+	position: absolute;
+	top: 0;
+	bottom: 0;
+	width: 10px;
+	z-index: 200;
+	cursor: ew-resize;
+}
+html[dir="ltr"] #commentResizer {
+	left: 0px;
+}
+html[dir="rtl"] #commentResizer {
+	right: 0px;
 }

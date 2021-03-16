@@ -1,5 +1,5 @@
 /* 赵庆：工具库，以及全局配置 */
-import { AnnotationBar } from "./annotation_bar.js"
+import { AnnotationBar, CommentContainerTool } from "./annotation_bar.js"
 import { PDFViewerApplication } from "../app.js";
 
 // 全局配置
@@ -23,14 +23,79 @@ const GlobalConfig = {
 	eventUtil: null,
 	annotationType: null,
 	mouseState: null,
+	container:{
+		viewerContainer: null,
+		commentContainer: null,
+		commentResizer: null,
+	}
 }
 
+// 事件类
+class EventUtil{
+
+	constructor(params) {
+
+    }
+
+    static addHandler(element, type, handler, flag = false){
+        // 先判斷是否存在該事件，如果不存在加入，否則不加入
+        let name = "element.tagName=" + element.tagName + "&element.id="+ element.getAttribute("id") + "&type=" + type + "&handler.name=" + handler.name;
+        // let name = element.tagName + "_" + type + "_" + handler.name;
+        if (GlobalConfig.eventBus != null) {
+            for (let i = 0; i < GlobalConfig.eventBus.length; i++){
+                if (name == GlobalConfig.eventBus[i]){
+                    return;
+                }
+            }
+            GlobalConfig.eventBus.push(name);
+        };
+
+        if (element.addEventListener){ //如果存在 DOM2 级方法
+            element.addEventListener(type, handler, flag);
+        } else if (element.attachEvent){ //如果存在的是 IE 的方法
+            element.attachEvent("on" + type, handler); //为了在 IE8 及更早版本中运行，此时的事件类型必须加上"on"前缀。
+        } else { //是使用 DOM0 级方法
+            element["on" + type] = handler;
+        };
+
+    }
+
+    static removeHandler(element, type, handler, flag = false){
+        if (element.removeEventListener){ //如果存在 DOM2 级方法
+            element.removeEventListener(type, handler, flag);
+        } else if (element.detachEvent){ //如果存在的是 IE 的方法
+            element.detachEvent("on" + type, handler); //为了在 IE8 及更早版本中运行，此时的事件类型必须加上"on"前缀。
+        } else { //是使用 DOM0 级方法
+            element["on" + type] = null;
+        }
+
+        let name = "element.tagName=" + element.tagName + "&element.id="+ element.getAttribute("id") + "&type=" + type + "&handler.name=" + handler.name;
+        if (GlobalConfig.eventBus != null) {
+            for (let i = 0; i < GlobalConfig.eventBus.length; i++){
+                if (name == GlobalConfig.eventBus[i]){
+                    // 移除保存的事件
+                    GlobalConfig.eventBus.splice(i, 1);
+                }
+            }
+        };
+    }
+
+};
 
 /* 判断文档以及每一页的 canvas 标签是否加载完毕，如果加载完毕执行回调函数 */
 function isPDFLoaded(PDFViewerApplication, callback){
 	var interval = setInterval(loadPdf, 1000);
     function loadPdf() {
         if (PDFViewerApplication.pdfDocument != null) {
+			var outerContainer = document.getElementById("outerContainer");
+			if(outerContainer != null && document.getElementById("commentContainer") == null){
+				var commentContainerTool = new CommentContainerTool();	// 创建批注内容容器
+				var commentContainer = commentContainerTool.create();
+				insertBeforeFirstChild(outerContainer, commentContainer);
+				commentResize();
+			}
+		
+
 			GlobalConfig.pdfViewerApplication = PDFViewerApplication;
 			var pageViewer = PDFViewerApplication.pdfViewer.getPageView(PDFViewerApplication.page - 1);	// 获取当前页面当前页
 			var pageList = PDFViewerApplication.pdfViewer.viewer.childNodes;
@@ -81,6 +146,40 @@ function isPDFLoaded(PDFViewerApplication, callback){
             console.info('Loading...');
         }
     }
+}
+
+// 移动注释内容容器，改变宽度
+function commentResize(){
+
+	GlobalConfig.container.viewerContainer = document.getElementById("viewerContainer");
+	GlobalConfig.container.commentContainer = document.getElementById("commentContainer");
+	GlobalConfig.container.commentResizer = document.getElementById("commentResizer");
+
+	GlobalConfig.xStart = null;
+	GlobalConfig.mousMove = function(e){
+		e = event || windows.event;
+		var dx = e.clientX - GlobalConfig.xStart;
+		GlobalConfig.container.viewerContainer.style.width = (GlobalConfig.container.viewerContainer.width + dx) + "px" ;
+		GlobalConfig.container.commentContainer.style.width = (GlobalConfig.container.commentContainer.width - dx) + "px" ;
+	}
+
+	GlobalConfig.mousUp = function(e){
+
+		EventUtil.removeHandler(commentResizer, "mousemove", GlobalConfig.mousMove, true);
+	}
+
+
+	var mouseDown = function(e){
+		e = event || windows.event;
+		GlobalConfig.xStart = e.clientX;
+		GlobalConfig.container.viewerContainer.width = GlobalConfig.container.viewerContainer.clientWidth;
+		GlobalConfig.container.commentContainer.width = GlobalConfig.container.commentContainer.clientWidth;
+		EventUtil.addHandler(commentResizer, "mousemove", GlobalConfig.mousMove, true);
+		EventUtil.addHandler(commentResizer, "mouseup", GlobalConfig.mousUp);
+	}
+
+	EventUtil.addHandler(commentResizer, "mousedown", mouseDown);
+	
 }
 
 /* 追加样式 */
@@ -173,4 +272,5 @@ export {
 	isPDFLoaded,
 	GlobalConfig,
 	bindEvent,
+	EventUtil,
 }

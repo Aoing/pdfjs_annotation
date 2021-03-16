@@ -1,5 +1,6 @@
-import { insertAfter, createAnnotationBar, isPDFLoaded, GlobalConfig, bindEvent } from "./annotation_utils.js"
-import { AnnotationBar, AnnotationButton } from "./annotation_bar.js"
+import { insertAfter, createAnnotationBar, isPDFLoaded, GlobalConfig, bindEvent, EventUtil} from "./annotation_utils.js"
+import { AnnotationBar, AnnotationButton, CommentContainerTool } from "./annotation_bar.js"
+import { PDFViewerApplication } from "../app.js"
 
 /* 注释对象 */
 class Annotation {
@@ -282,7 +283,7 @@ class AnnotationTool {
 	
 }
 
-// 事件类
+/*// 事件类
 class EventUtil{
 
 	constructor(params) {
@@ -332,7 +333,7 @@ class EventUtil{
         };
     }
 
-};
+};*/
 
 /* Annotation 的启动入口方法 */
 function run() {
@@ -341,8 +342,6 @@ function run() {
 	
 	// 当工具栏加载完毕后执行的回调函数
 	var callback = function(){
-
-		var pdfCursorTools = PDFViewerApplication.pdfCursorTools;	// 获取全局的工具栏二级工具
 
 		// 创建直线按钮
 		var lineAnnotationButton = new AnnotationButton({
@@ -552,6 +551,9 @@ function run() {
 		// 渲染页面时，绘制当前页面所有注释
 		annotationTool.drawAnnotations(GlobalConfig.canvas, GlobalConfig.annotations[GlobalConfig.page]);
 
+		var pdfCursorTools = PDFViewerApplication.pdfCursorTools;	// 获取全局的工具栏二级工具
+		var appConfig = PDFViewerApplication.appConfig;
+		
 	}
 	isPDFLoaded(PDFViewerApplication, addDrawEvent);	// 当页面创建成功时，给新建的注释层绑定绘制事件
 

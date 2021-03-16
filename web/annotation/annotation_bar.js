@@ -104,7 +104,48 @@ class AnnotationBar {
 
 }
 
+// 批注评论区
+class CommentContainerTool{
+	constructor(){
+		this.commentContainer = null;
+		this.commentContentDiv = null;
+		this.commentResizer = null;
+
+	}
+
+	create(){
+		var commentContainer = document.createElement("div");	// 创建批注评论区最外面的 div
+		commentContainer.id = "commentContainer";
+		var commentContentDiv = document.createElement("div");	// 创建批注内容 div
+		commentContentDiv.id = "commentContentDiv";
+		commentContainer.appendChild(commentContentDiv);
+		var commentResizer = document.createElement("div");	// 创建改变尺寸的 div
+		commentResizer.id = "commentResizer";
+		commentContainer.appendChild(commentResizer);
+
+		this.commentContainer = commentContainer;
+		this.commentContentDiv = commentContentDiv;
+		this.commentResizer = commentResizer;
+		return commentContainer;
+	}
+
+	createChildDiv(data){
+		var childDiv = document.createElement("div");	// 创建批注评论区最外面的 div
+		childDiv.id = data.id;
+
+	}
+
+	createComment(){
+		var commentContent = document.createElement("div");	// 创建单个批注 div
+		commentContent.id = "commentContent";
+		this.commentContentDiv.appendChild(commentContentDiv);
+	}
+
+}
+
 export {
     AnnotationBar,
 	AnnotationButton,
+	CommentContainerTool,
+	
 }
