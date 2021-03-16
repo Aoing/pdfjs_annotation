@@ -26,8 +26,10 @@ const GlobalConfig = {
 	container:{
 		viewerContainer: null,
 		commentContainer: null,
+		commentContentDiv: null,
 		commentResizer: null,
-	}
+	},
+	commentContainerTool: null,
 }
 
 // 事件类
@@ -93,6 +95,7 @@ function isPDFLoaded(PDFViewerApplication, callback){
 				var commentContainer = commentContainerTool.create();
 				insertBeforeFirstChild(outerContainer, commentContainer);
 				commentResize();
+				GlobalConfig.commentContainerTool = commentContainerTool;
 			}
 		
 
@@ -152,6 +155,7 @@ function isPDFLoaded(PDFViewerApplication, callback){
 function commentResize(){
 
 	GlobalConfig.container.viewerContainer = document.getElementById("viewerContainer");
+
 	GlobalConfig.container.commentContainer = document.getElementById("commentContainer");
 	GlobalConfig.container.commentResizer = document.getElementById("commentResizer");
 

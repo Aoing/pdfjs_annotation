@@ -65,10 +65,10 @@ html[dir="ltr"] #commentResizer {
 	/*width: var(--comment-width);*/
 	/*visibility: hidden;*/
 	z-index: 100;
-	border-top: 1px solid rgba(51, 51, 51, 1);
+	/*border-top: 1px solid rgba(51, 51, 51, 1);*/
 	transition-duration: var(--comment-transition-duration);
 	transition-timing-function: var(--comment-transition-timing-function);
-	background-color: aqua;
+	background-color: rgb(203, 206, 206);
 }
 
 html[dir="ltr"] #commentContainer {
@@ -108,7 +108,6 @@ html[dir="rtl"] #outerContainer.sidebarOpen #sidebarContainer {
 	-webkit-overflow-scrolling: touch;
 	position: absolute;
 	width: 100%;
-	background-color: rgba(0, 0, 0, 0.1);
 }
 html[dir="ltr"] #commentContentDiv {
 	left: 0;
@@ -124,13 +123,46 @@ html[dir="rtl"] #commentContentDiv {
 	position: absolute;
 	top: 0;
 	bottom: 0;
-	width: 6px;
+	width: 12px;
 	z-index: 200;
 	cursor: ew-resize;
 }
 html[dir="ltr"] #commentResizer {
-	left: 0px;
+	left: -6px;
 }
 html[dir="rtl"] #commentResizer {
-	right: 0px;
+	right: -6px;
+}
+
+.pageAnnotationDiv{
+	position: relative;
+	left: 5px;
+	right: 5px;
+	height: auto;
+	background-color: rgb(205, 209, 209);
+	text-align: center;
+	margin-bottom: 10px;
+}
+
+.commentContent{
+	position: relative;
+	height: auto;
+	width: 200px;
+	margin: 0 auto;
+	background-color: rgb(225, 230, 225);
+	margin-bottom: 20px;
+}
+
+.date-and-time{
+	opacity: .8;
+    font-size: 10px;
+    color: var(--faded-text);
+}
+
+.textarea{
+	height: 27px;
+}
+
+.span{
+	text-align: left;
 }

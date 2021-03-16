@@ -6,7 +6,7 @@ import { PDFViewerApplication } from "../app.js"
 class Annotation {
     constructor(params) {
 
-		this.id = null;                             // id 标识
+		this.id = params.id;                             // id 标识
 		this.position = params.position;						// 坐标位置
 		this.width = params.width;                          // 注释宽
 		this.height = params.height;                         // 注释高
@@ -22,11 +22,8 @@ class Annotation {
 		this.addDatetime = params.addDatetime;                        // 新增注释时间
 		this.pageNumber = params.pageNumber;                           // 注释所在的页面
 		this.type = params.type;                           // 注释类型：1 矩形，2 圆形
-		this.content = {									// 批阅内容
-
-		};                     		
-        
-    }
+		this.content = params.content;								// 批阅内容           
+	}      		
 
 }
 
@@ -553,6 +550,19 @@ function run() {
 
 		var pdfCursorTools = PDFViewerApplication.pdfCursorTools;	// 获取全局的工具栏二级工具
 		var appConfig = PDFViewerApplication.appConfig;
+		GlobalConfig.commentContainerTool.createComment(new Annotation({
+			id: "123456",
+			author: "Aoing",                         // 添加注释的作者
+			authors: "",                        // 注释作者组
+			updateUserName: "",                 // 修改注释的用户名称
+			updateTime: new Date(),                     // 修改注释的时间
+			addDatetime: new Date(),                        // 新增注释时间
+			pageNumber: 1,
+			content: {									// 批阅内容
+				text: "批阅内容",
+				image: "url",
+			}            		
+	}));
 		
 	}
 	isPDFLoaded(PDFViewerApplication, addDrawEvent);	// 当页面创建成功时，给新建的注释层绑定绘制事件

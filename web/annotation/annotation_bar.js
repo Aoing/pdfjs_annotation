@@ -123,22 +123,66 @@ class CommentContainerTool{
 		commentResizer.id = "commentResizer";
 		commentContainer.appendChild(commentResizer);
 
-		this.commentContainer = commentContainer;
-		this.commentContentDiv = commentContentDiv;
-		this.commentResizer = commentResizer;
+		// 加入到全局变量中, 以便于其他模块直接使用
+		GlobalConfig.container.commentContainer = commentContainer;
+		GlobalConfig.container.commentContentDiv = commentContentDiv;
+		GlobalConfig.container.commentResizer = commentResizer;
+		
+		GlobalConfig.container.viewerContainer = document.getElementById("viewerContainer");
 		return commentContainer;
 	}
 
 	createChildDiv(data){
-		var childDiv = document.createElement("div");	// 创建批注评论区最外面的 div
+		var childDiv = document.createElement("div");	// 创建批注评论区内部标题 div
 		childDiv.id = data.id;
 
 	}
 
-	createComment(){
-		var commentContent = document.createElement("div");	// 创建单个批注 div
-		commentContent.id = "commentContent";
-		this.commentContentDiv.appendChild(commentContentDiv);
+	// 创建单个评论 div
+	createComment(annotation){
+		if(annotation != null){
+			var id = "pageAnnotationDiv_" + annotation.pageNumber;
+			var pageAnnotationDiv = document.getElementById(id);
+			if(pageAnnotationDiv == null){
+				pageAnnotationDiv = document.createElement("div");	
+				pageAnnotationDiv.classList.add("pageAnnotationDiv");
+				pageAnnotationDiv.id = id ;
+				GlobalConfig.container.commentContentDiv.appendChild(pageAnnotationDiv);	
+			}
+
+			// 根据注释创建单个注释内容容器
+			var commentContent = document.createElement("div");	
+			commentContent.classList.add("commentContent");
+			commentContent.id = "commentContent" + annotation.id;	// 注意：此时注释对象应该已经生成 id
+
+			var span = document.createElement("span");
+			span.innerHTML = annotation.author;
+			span.classList.add("pan");
+			var date = document.createElement("div");	
+			date.innerHTML = annotation.addDatetime;
+			date.classList.add("date-and-time");
+			var textarea = document.createElement("textarea");	
+			textarea.setAttribute("placeholder","Comment...");
+			textarea.setAttribute("aria-label","Comment...");
+			textarea.classList.add("textarea");
+			if(annotation.content != null){
+				textarea.innerHTML = annotation.content.text;
+			}
+
+			var cancelButton = document.createElement("button");
+			var saveButton = document.createElement("button");
+			cancelButton.innerHTML = "Cancel";
+			saveButton.innerHTML = "Save";
+			span.innerHTML = annotation.author;
+
+			commentContent.append(span);
+			commentContent.append(date);
+			commentContent.append(textarea);
+			commentContent.append(cancelButton);
+			commentContent.append(saveButton);
+
+			pageAnnotationDiv.appendChild(commentContent);
+		}
 	}
 
 }
