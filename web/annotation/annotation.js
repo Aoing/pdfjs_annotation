@@ -87,12 +87,35 @@ class AnnotationTool {
                 case "rect" :
                     this.drawRect(context, annotation, flag)
                     break;
+				case "circle" :
+                    this.drawCircle(context, annotation, flag)
+                    break;
                 default :
 					console.log("注释类型：" + annotation.type);
                     break;
             }
         }
     }
+
+	// 绘制圆形
+	drawCircle(context, annotation, flag){
+		var x = (annotation.position[2] + annotation.position[0])/2,
+			y = (annotation.position[3] + annotation.position[1])/2,
+			r = Math.abs((annotation.position[2] - annotation.position[0])/2),
+			strokeStyle = annotation.strokeStyle,
+			lineWidth  = annotation.lineWidth;
+
+		if(flag){
+			strokeStyle = GlobalConfig.currentAnnotationAttribute.strokeStyle,
+			lineWidth  = GlobalConfig.currentAnnotationAttribute.lineWidth;
+		}
+		context.beginPath();
+		context.strokeStyle = strokeStyle;
+		context.lineWidth = lineWidth;
+		context.arc(x, y, r, 0, 2*Math.PI);
+		context.stroke();
+		
+	}
 
 	// 绘制矩形
     drawRect(context, annotation, flag) {
@@ -195,8 +218,9 @@ class AnnotationTool {
 		// 创建注释并保存
 		_this.currentAnnotation = new Annotation(data);
 		_this.drawAnnotations(_this.canvas, GlobalConfig.annotations[GlobalConfig.page]);	// 绘制当前页面所有注释，否则移动鼠标绘制时，会清除所有注释，只有当松开鼠标时才重新绘制
-		/* 此处应该是绘制拉选框的注释 */
+		/* 此处应该是绘制拉选框的注释, flag 置为 true */
 		_this.drawAnnotation(_this.context, _this.currentAnnotation, true);
+		//_this.drawRect(_this.context, _this.currentAnnotation, true);
 		console.log("mouseMove: "+e.offsetX);
 	}
 
@@ -457,7 +481,7 @@ function run() {
 		// 给所有注释按钮绑定事件: 如果触发绘制注释按钮选择，则进行标记当前鼠标状态以便于后期根据其状态将注释层置于文本层上
 		for (var key in GlobalConfig.annotationButton) {
 			var annotationButton = GlobalConfig.annotationButton[key];
-			EventUtil.addHandler(annotationButton, "click", annotationLayerToTop);
+			EventUtil.addHandler(annotationButton, "click", annotationLayerToTop);	// 给所有注释按钮添加事件
 		}
 
 		// 如果点击了选择文字状态
